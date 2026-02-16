@@ -635,8 +635,8 @@ class polymesh extends polyview {
 
     //% blockId=poly_setfaceimage
     //% blockNamespace=Polymesh
-    //% block=" $this set face image at $idx to $img=screen_image_picker|| and LOD as $imgs=lists_create_with"
-    //% imgs.defl=screen_image_picker
+    //% block=" $this set face image at $idx to $img=image_picker|| and LOD as $imgs=lists_create_with"
+    //% imgs.defl=image_picker
     //% this.shadow=variables_get this.defl=myMesh
     //% group="Mesh face property"
     //% weight=7

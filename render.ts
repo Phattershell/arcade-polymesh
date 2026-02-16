@@ -14,7 +14,7 @@ namespace Polymesh {
     }
 
     //% blockId=poly_rendermesh_all
-    //% block=" render all mesh of kind $id=poly_kind_shadow to $output=screen_image_picker|| form line render $lineren=toggleYesNo"
+    //% block=" render all mesh of kind $id=poly_kind_shadow to $output=image_picker|| form line render $lineren=toggleYesNo"
     //% group="rendeer"
     //% weight=9qee
     export function renderAll(id: number, output: Image, lineren?: boolean) {
@@ -27,7 +27,7 @@ namespace Polymesh {
     }
 
     //% blockId=poly_rendermesh
-    //% block=" $msh render to $output=screen_image_picker|| as line render $lineren=toggleYesNo"
+    //% block=" $msh render to $output=image_picker|| as line render $lineren=toggleYesNo"
     //% msh.shadow=variables_get msh.defl=myMesh
     //% group="render"
     //% weight=10
