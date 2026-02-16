@@ -15,7 +15,7 @@ namespace Polymesh {
 
     //% blockId=poly_rendermesh_all
     //% block=" render all mesh of kind $id=poly_kind_shadow to $output=image_picker|| form line render $lineren=toggleYesNo"
-    //% group="rendeer"
+    //% group="render"
     //% weight=9qee
     export function renderAll(id: number, output: Image, lineren?: boolean) {
         if ((id == null || isNaN(id)) || !output) return;
