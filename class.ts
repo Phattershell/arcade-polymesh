@@ -501,7 +501,216 @@ class polyview extends polybase {
     }
 
     computeMsh(msh: polymesh) {
-        
+        if (msh.isDel()) return;
+        if (!msh || !output || msh.points.length <= 0 || msh.faces.length <= 0) return;
+        if (msh.flag.invisible) return;
+
+        const centerX = Math.idiv(output.width, 2), centerY = Math.idiv(output.height, 2);
+
+        let tmp = 0
+        const cosX = Math.cos(camview.rot.x), sinX = Math.sin(camview.rot.x);
+        const cosY = Math.cos(camview.rot.y), sinY = Math.sin(camview.rot.y);
+        const cosZ = Math.cos(camview.rot.z), sinZ = Math.sin(camview.rot.z);
+
+        // Transform vertices
+        const rotated = msh.pointCam((v) => {
+            let x = v.x - camview.pos.x;
+            let y = v.y - camview.pos.y;
+            let z = v.z - camview.pos.z;
+            tmp = x * cosY + z * sinY, z = -x * sinY + z * cosY, x = tmp; // --- rotate around y ---
+            tmp = y * cosX - z * sinX, z =  y * sinX + z * cosX, y = tmp; // --- rotate around x ---
+            tmp = x * cosZ - y * sinZ, y =  x * sinZ + y * cosZ, x = tmp; // --- rotate around z ---
+
+            const vsum = 0.1 / Math.sqrt((x * x) + (y * y) + (z * z))
+            // camera offset
+            x += (x === 0 ? 0 : vsum);
+            y += (y === 0 ? 0 : vsum);
+            z += (z === 0 ? 0 : vsum);
+            // Perspective
+            const scale = Math.abs(dist) / (Math.abs(dist) + z);
+            return {
+                x:  centerX + x * scale * zoom,
+                y:  centerY + y * scale * zoom,
+                z:  z,
+                x_: v.x,
+                y_: v.y,
+                z_: v.z,
+            };
+        }) as Vector3_[];
+
+        // Render
+        let cx: number, cy: number, range: number, square: number, im: Image
+        for (let i = 0;i < tris.length;i++) {
+            const t = tris[i]
+            const inds = t.indices;
+            if (inds.some(i => (rotated[i].z < -Math.abs(dist) || (fardist > 0 && rotated[i].z > Math.abs(fardist))))) continue;
+            const aZ = Polymesh.avgZ(rotated, inds);
+            const inds_ = [];
+            if (inds.length > 2) inds_[0] = [t.indices[0], t.indices[1], t.indices[2]];
+            if (inds.length > 3) inds_[1] = [t.indices[3], t.indices[1], t.indices[2]];
+            const scale = (Math.abs(dist) / (Math.abs(dist) + Polymesh.avgZ(rotated, t.indices)));
+            // LOD calculating?
+            if (t.img) {
+                im = t.img.clone();
+                if (msh.flag.texStream) {
+                    const scaleD = (scale * zoom)
+                    im = t.imgs[Math.clamp(0, t.imgs.length - 1, Math.trunc((Math.sqrt(scaleD / 1.5) * PHI) * (t.imgs.length - 1)))]
+                    if (im == null) im = image.create(1, 1)
+                }
+            }
+            if (t.indices.length === 1) {
+                const idx = t.indices[0];
+                const pt = rotated[idx];
+
+                // center image
+                cx = pt.x;
+                cy = pt.y;
+
+                const bq = [
+                    { x: cx, y: cy },
+                    { x: cx, y: cy },
+                    { x: cx, y: cy },
+                    { x: cx, y: cy },
+                ]
+
+                square = dist + (2048 * (scale * t.scale) * zoom)
+                if (im) {
+                    // set scale image from camera distance
+                    const baseW = im.width;
+                    const baseH = im.height;
+                    const halfW = (baseW / 3) * scale * t.scale * zoom;
+                    const halfH = (baseH / 3) * scale * t.scale * zoom;
+
+                    bq[0].x += halfW, bq[0].y += halfH
+                    bq[1].x -= halfW, bq[1].y += halfH
+                    bq[2].x += halfW, bq[2].y -= halfH
+                    bq[3].x -= halfW, bq[3].y -= halfH
+                    if (bq.every(v => (this.isOutOfArea(v.x, v.y)))) continue;
+                } else {
+                    bq[0].x += square, bq[0].y += square
+                    bq[1].x -= square, bq[1].y += square
+                    bq[2].x += square, bq[2].y -= square
+                    bq[3].x -= square, bq[3].y -= square
+                    if (bq.every(v => (this.isOutOfArea(v.x, v.y)))) continue;
+                }
+            } else if (inds.every(i => this.isOutOfArea(rotated[i].x, rotated[i].y))) continue;
+
+            const culling = msh.flag.cull
+
+            // Backface culling
+            //if (culling)
+            //    if ((inds_[0] && !shouldRenderFace(rotated, inds_[0], camview.pos, t.offset)) &&
+            //        (inds_[1] && !shouldRenderFace(rotated, inds_[1], camview.pos, t.offset))) continue;
+
+            //if (culling) if (shouldCull(avgXYZ(rotated, inds), t.offset)) continue;
+
+            const idx = t.indices[0];
+            const pt = rotated[idx];
+            // center image
+            cx = pt.x;
+            cy = pt.y;
+
+            square = dist + (2048 * (scale * t.scale) * zoom)
+
+            let halfW = square + dist;
+            let halfH = square + dist;
+
+            if (t.img) {
+                // set scale image from camera distance
+                const baseW = im.width;
+                const baseH = im.height;
+
+                halfW = (baseW / 3) * scale * t.scale * zoom;
+                halfH = (baseH / 3) * scale * t.scale * zoom;
+
+                square = Polymesh.gcd(halfW, halfH)
+            };
+            // when have 2D image billboard (indices.length == 1 and img)
+            if (t.indices.length === 1) {
+                if (pt.z < -Math.abs(dist)) continue;
+
+                // when no image
+                if (!t.img) { /*fillCircleImage(output, cx, cy, square, t.color);*/ continue; }
+
+                // fill circle if image is empty
+                if (Polymesh.isEmptyImage(t.img)) { /*fillCircleImage(output, cx, cy, square, t.color);*/ continue; }
+
+                halfW /= 1.5;
+                halfH /= 1.5;
+
+                // Draw Simple 2D image (billboard) as quad pixel on image
+                // use distortImage or drawing without perspective distortion
+                // I will use distortImage draw as vertex quad
+                this.distortImage(im,
+                    cx + halfW, cy - halfH,
+                    cx - halfW, cy - halfH,
+                    cx - halfW, cy + halfH,
+                    cx + halfW, cy + halfH,
+                    aZ
+                );
+                continue;
+            }
+
+            if (inds.length < 2) continue;
+            // Draw line canvas when have line color index
+            if (lineren) {
+                this.drawLine(rotated[inds[0]].x, rotated[inds[0]].y, rotated[inds[1]].x, rotated[inds[1]].y, t.color, aZ);
+                if (inds.length < 3) continue;
+                this.drawLine(rotated[inds[0]].x, rotated[inds[0]].y, rotated[inds[2]].x, rotated[inds[2]].y, t.color, aZ);
+                if (inds.length > 3) this.drawLine(rotated[inds[3]].x, rotated[inds[3]].y, rotated[inds[1]].x, rotated[inds[1]].y, t.color, aZ), this.drawLine(output, rotated[inds[3]].x, rotated[inds[3]].y, rotated[inds[2]].x, rotated[inds[2]].y, t.color, aZ);
+                else this.drawLine(rotated[inds[1]].x, rotated[inds[1]].y, rotated[inds[2]].x, rotated[inds[2]].y, t.color, aZ);
+                continue;
+            }
+            if (t.color > 0) {
+                // Draw line when no shape
+                if (inds.length < 3) {
+                    this.drawLine(
+                        rotated[inds[0]].x, rotated[inds[0]].y,
+                        rotated[inds[1]].x, rotated[inds[1]].y,
+                        t.color, aZ
+                    );
+                }
+                if (inds.length > 2) {
+                    // Draw solid when is vertice shape
+                    this.fillTriangle(
+                        rotated[inds[0]].x, rotated[inds[0]].y,
+                        rotated[inds[1]].x, rotated[inds[1]].y,
+                        rotated[inds[2]].x, rotated[inds[2]].y,
+                        t.color, aZ
+                    );
+                    if (inds.length > 3) {
+                        this.fillTriangle(
+                            rotated[inds[3]].x, rotated[inds[3]].y,
+                            rotated[inds[1]].x, rotated[inds[1]].y,
+                            rotated[inds[2]].x, rotated[inds[2]].y,
+                            t.color, aZ
+                        );
+                    }
+                }
+            }
+
+            if ((t.img && Polymesh.isEmptyImage(t.img)) || !t.img) continue;
+
+            // Draw texture over
+            if (inds.length > 2) {
+                this.distortImage(im,
+                    rotated[inds[3]].x, rotated[inds[3]].y,
+                    rotated[inds[2]].x, rotated[inds[2]].y,
+                    rotated[inds[0]].x, rotated[inds[0]].y,
+                    rotated[inds[1]].x, rotated[inds[1]].y,
+                    aZ
+                );
+            } else if (inds.length > 3) {
+                this.distortImage(im,
+                    rotated[inds[3]].x, rotated[inds[3]].y,
+                    rotated[inds[2]].x, rotated[inds[2]].y,
+                    rotated[inds[0]].x, rotated[inds[0]].y,
+                    rotated[inds[1]].x, rotated[inds[1]].y,
+                    aZ
+                );
+            }
+
+        }
     }
 
     render() {
