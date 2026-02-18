@@ -104,11 +104,11 @@ forever(function () {
         Polymesh.setAngle(PolyAngle.vy, 0)
     }
 })
-/* game.onUpdate(function () {
+game.onUpdate(function () {
     scene.setBackgroundColor(TmpPal.getPixel(OffsetPal, 0))
     scene.setBackgroundImage(image.create(scene.screenWidth(), scene.screenHeight()))
     Polymesh.renderAll(PolyKind.obj, scene.backgroundImage())
-}) */
+})
 forever(function () {
     // if (Polymesh.meshAll(PolyKind.obj).length <= 0) setupMesh();
     for (let value4 of Polymesh.meshAll(PolyKind.obj)) {
