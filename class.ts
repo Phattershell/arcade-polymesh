@@ -246,6 +246,10 @@ class polyview extends polybase {
 
     private readonly pos2idx = (a: number, r: number, b: number) => (a * r) + b;
 
+    private readonly isOutOfRange = (n: number, r: number) => (n < 0 || n >= r);
+    private isOutOfArea(x: number, y: number) { return (this.isOutOfRange(x, this.width) || this.isOutOfRange(y, this.height)) };
+    private isOutOfAreas(xs: number[], ys: number[]) { return xs.some((_, i) => this.isOutOfRange(xs[i], ys[i]))};
+
     setScene(img: Image) {
         if (!this.img) this.img = img, this.zBuffer = pins.createBuffer(this.img.width * this.img.height), this.cBuffer = pins.createBuffer(this.img.width * this.img.height), this.width = this.img.width, this.height = this.img.height, this.buf = pins.createBuffer(this.height);
         else if (this.img.width !== img.width || this.img.height !== img.height) this.img = img, this.zBuffer = pins.createBuffer(this.img.width * this.img.height), this.cBuffer = pins.createBuffer(this.img.width * this.img.height), this.width = this.img.width, this.height = this.img.height, this.buf = pins.createBuffer(this.height);
@@ -262,11 +266,12 @@ class polyview extends polybase {
         return Math.map(z, this.near, this.far, 0x00, 0xff) >> 0;
     }
 
-    setDot(x: number, y: number, z: number, c: number, free?: boolean) {
+    setDot(x: number, y: number, z: number, c: number) {
+        if (this.isOutOfArea(x, y)) return;
         const i = this.pos2idx(x, this.height, y);
         const zUint8 = this.distToUint8(z);
         if (z <= 0x00 || z >= 0xff) return;
-        if (!free && this.zBuffer[i] > zUint8) return;
+        if (this.zBuffer[i] > zUint8) return;
         this.cBuffer[i] = c;
         this.zBuffer[i] = zUint8;
     }
@@ -301,12 +306,160 @@ class polyview extends polybase {
         }
     }
 
+    setRows(x: number, src: Buffer, z: number) {
+        const zUint8 = this.distToUint8(z);
+        if (zUint8 <= 0x00 || zUint8 >= 0xff) return;
+        const n = x * this.height;
+        const m = Math.min(this.height, src.length)
+        for (let i = 0; i < m; i++) {
+            const i_n = i + n;
+            if (this.zBuffer[i_n] > zUint8) continue;
+            this.zBuffer[i_n] = zUint8;
+            this.cBuffer[i_n] = src[i];
+        }
+    }
+
+    getRows(x: number, src_c: Buffer, src_z?: Buffer) {
+        const ix = x * this.height;
+        this.buf.write(ix, this.cBuffer);
+        src_c.write(0, this.buf);
+        if (!src_z) return;
+        this.buf.write(ix, this.zBuffer);
+        src_z.write(0, this.buf);
+    }
+
     getPixel(x: number, y: number) {
         return this.cBuffer[this.pos2idx(x, this.height, y)]
     }
 
     getDepth(x: number, y: number) {
         return this.zBuffer[this.pos2idx(x, this.height, y)]
+    }
+
+    // คืน bounding box ที่ clip กับภาพแล้ว [minX, maxX, minY, maxY]
+    getClippedBounds(
+        xCoords: number[],  // x ของจุดต่าง ๆ
+        yCoords: number[]   // y ของจุดต่าง ๆ
+    ): number[] {
+        const w = this.width;
+        const h = this.height;
+
+        let minX = w;
+        let maxX = -1;
+        let minY = h;
+        let maxY = -1;
+
+        for (let i = 0; i < xCoords.length; i++) {
+            const x = Math.clamp(0, totalW - 1, xCoords[i]);
+            const y = Math.clamp(0, h - 1, yCoords[i]);
+            minX = Math.min(minX, x);
+            maxX = Math.max(maxX, x);
+            minY = Math.min(minY, y);
+            maxY = Math.max(maxY, y);
+        }
+
+        if (minX > maxX || minY > maxY) return [0, -1, 0, -1]; // ว่าง
+        return [minX, maxX, minY, maxY];
+    }
+
+    // manual sort 3 จุดตาม x (คืน index เรียงจาก x น้อย → มาก)
+    private sortTrianglePointsByX(
+        x0: number, y0: number,
+        x1: number, y1: number,
+        x2: number, y2: number
+    ): number[] {  // คืน [idxA, idxB, idxC] โดย xA <= xB <= xC
+        if (x0 <= x1 && x0 <= x2) {
+            if (x1 <= x2) return [0, 1, 2];
+            return [0, 2, 1];
+        }
+        if (x1 <= x0 && x1 <= x2) {
+            if (x0 <= x2) return [1, 0, 2];
+            return [1, 2, 0];
+        }
+        // x2 เป็น min
+        if (x0 <= x1) return [2, 0, 1];
+        return [2, 1, 0];
+    }
+
+    fximgDrawTriangle(
+        x0: number, y0: number,
+        x1: number, y1: number,
+        x2: number, y2: number,
+        z: number, color: number
+    ) {
+        this.drawLine(fxpic, x1, y1, x0, y0, z, color, idx);
+        this.drawLine(fxpic, x2, y2, x1, y1, z, color, idx);
+        this.drawLine(fxpic, x0, y0, x2, y2, z, color, idx);
+    }
+
+    fillTriangle(
+        x0: number, y0: number,
+        x1: number, y1: number,
+        x2: number, y2: number,
+        z: number, color: number
+    ) {
+
+        color &= 0xF;
+        const w = this.width;
+        const h = this.height;
+        if (this.isOutOfAreas([x0,x1,x2],[y0,y1,y2])) return;
+
+        // bounding box clip
+        const [minX, maxX, minY, maxY] = this.getClippedBounds(fxpic, [x0, x1, x2], [y0, y1, y2]);
+        if (minX > maxX) return;
+
+        // manual sort จุดตาม x
+        const order = this.sortTrianglePointsByX(x0, y0, x1, y1, x2, y2);
+        const xs = [x0, x1, x2];
+        const ys = [y0, y1, y2];
+        const xa = xs[order[0]], ya = ys[order[0]];
+        const xb = xs[order[1]], yb = ys[order[1]];
+        const xc = xs[order[2]], yc = ys[order[2]];
+
+        const rowBuf = pins.createBuffer(h);
+
+        for (let x = Math.max(0, minX | 0); x <= Math.min(w - 1, maxX | 0); x++) {
+            fximgGetRows(fxpic, idx + x, rowBuf, h);
+
+            // หา y range สำหรับ x นี้ (intersect กับ 3 ขอบ)
+            let yStart = h;
+            let yEnd = -1;
+
+            // ขอบ AB
+            if (xa !== xb) {
+                const t = (x - xa) / (xb - xa);
+                if (t >= 0 && t <= 1) {
+                    const yab = ya + t * (yb - ya);
+                    yStart = Math.min(yStart, yab);
+                    yEnd = Math.max(yEnd, yab);
+                }
+            }
+
+            // ขอบ AC
+            if (xa !== xc) {
+                const t = (x - xa) / (xc - xa);
+                if (t >= 0 && t <= 1) {
+                    const yac = ya + t * (yc - ya);
+                    yStart = Math.min(yStart, yac);
+                    yEnd = Math.max(yEnd, yac);
+                }
+            }
+
+            // ขอบ BC (เฉพาะเมื่อ x อยู่ระหว่าง xb กับ xc)
+            if (xb !== xc && x >= Math.min(xb, xc) && x <= Math.max(xb, xc)) {
+                const t = (x - xb) / (xc - xb);
+                const ybc = yb + t * (yc - yb);
+                yStart = Math.min(yStart, ybc);
+                yEnd = Math.max(yEnd, ybc);
+            }
+
+            if (yStart <= yEnd) {
+                const clipYStart = Math.max(minY, Math.ceil(yStart));
+                const clipYEnd = Math.min(maxY, Math.floor(yEnd));
+                for (let y = clipYStart; y <= clipYEnd; y++) if (rowBuf[y] !== color) rowBuf[y] = color;
+                fximgSetRows(fxpic, idx + x, rowBuf, h);
+            }
+        }
     }
 
     computeMsh(msh: polymesh) {
