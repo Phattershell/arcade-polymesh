@@ -217,9 +217,9 @@ namespace Polymesh {
         return isOutOfArea(avgXYs.x, avgXYs.y, width, height, 5)
     }
 
-    interface Pt { x: number; y: number; }
+    export interface Pt { x: number; y: number; }
 
-    const zigzet = (l: number, r: number, n: number, c?: boolean) => {
+    export function zigzet(l: number, r: number, n: number, c?: boolean) {
         if (l + n > r) return NaN;
         const size = (r - l);
         const n2 = Math.idiv(n, 2);

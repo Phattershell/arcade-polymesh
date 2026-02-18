@@ -278,10 +278,9 @@ class polyview extends polybase {
 
     drawLine(x0: number, y0: number, x1: number, y1: number, color: number, z?: number) {
         color &= 0xF;
-        if (x0 === x1 && y0 === y1) { this.setDot(fxpic, x0, y0, z, color); return; }
+        if (x0 === x1 && y0 === y1) { this.setDot(x0, y0, z, color); return; }
         const w = this.width;
         const h = this.height;
-        const iw = idx * w;
         if ((x0 < 0 && x1 < 0) || (x0 >= w && x1 >= w) ||
             (y0 < 0 && y1 < 0) || (y0 >= h && y1 >= h)) return;
 
@@ -294,7 +293,7 @@ class polyview extends polybase {
         while (1) {
             if (((sx < 0 && x0 < 0) || (sx > 0 && x0 >= w) && sx !== 0) ||
                 ((sy < 0 && y0 < 0) || (sy > 0 && y0 >= h) && sy !== 0)) break;
-            this.setDot(fxpic, x0, y0, color, z);
+            this.setDot(x0, y0, color, z);
 
             // ตรวจทิศทาง + เกินจุดหมายหรือยัง (ป้องกัน overflow)
             if (((sx > 0 && x0 >= x1) || (sx < 0 && x0 <= x1) && sx !== 0) ||
@@ -351,7 +350,7 @@ class polyview extends polybase {
         let maxY = -1;
 
         for (let i = 0; i < xCoords.length; i++) {
-            const x = Math.clamp(0, totalW - 1, xCoords[i]);
+            const x = Math.clamp(0, w - 1, xCoords[i]);
             const y = Math.clamp(0, h - 1, yCoords[i]);
             minX = Math.min(minX, x);
             maxX = Math.max(maxX, x);
@@ -388,9 +387,9 @@ class polyview extends polybase {
         x2: number, y2: number,
         color: number, z?: number
     ) {
-        this.drawLine(fxpic, x1, y1, x0, y0, color, z);
-        this.drawLine(fxpic, x2, y2, x1, y1, color, z);
-        this.drawLine(fxpic, x0, y0, x2, y2, color, z);
+        this.drawLine(x1, y1, x0, y0, color, z);
+        this.drawLine(x2, y2, x1, y1, color, z);
+        this.drawLine(x0, y0, x2, y2, color, z);
     }
 
     fillTriangle(
@@ -405,7 +404,7 @@ class polyview extends polybase {
         if (this.isOutOfAreas([x0,x1,x2],[y0,y1,y2])) return;
 
         // bounding box clip
-        const [minX, maxX, minY, maxY] = this.getClippedBounds(fxpic, [x0, x1, x2], [y0, y1, y2]);
+        const [minX, maxX, minY, maxY] = this.getClippedBounds([x0, x1, x2], [y0, y1, y2]);
         if (minX > maxX) return;
 
         // manual sort จุดตาม x
@@ -419,7 +418,7 @@ class polyview extends polybase {
         const rowBuf = pins.createBuffer(h);
 
         for (let x = Math.max(0, minX | 0); x <= Math.min(w - 1, maxX | 0); x++) {
-            this.getRows(idx + x, this.buf);
+            this.getRows(x, this.buf);
 
             // หา y range สำหรับ x นี้ (intersect กับ 3 ขอบ)
             let yStart = h;
@@ -464,7 +463,7 @@ class polyview extends polybase {
 
     distortImage(
         src: Image,
-        p0: Pt, p1: Pt, p2: Pt, p3?: Pt,
+        p0: Polymesh.Pt, p1: Polymesh.Pt, p2: Polymesh.Pt, p3?: Polymesh.Pt,
         z?: boolean) {
         if (Polymesh.isEmptyImage(src)) return;
         if (!p3) p3 = { x: p2.x + (p1.x - p0.x), y: p2.y + (p1.y - p0.y) };
@@ -472,7 +471,7 @@ class polyview extends polybase {
         const w_ = (1 / w), h_ = (1 / h);
         const rowBuf = pins.createBuffer(h)
         for (let sx = 0; sx < w; sx++) {
-            const ix = Polymesh.zigzet(0, w-1, sx, center);
+            const ix = Polymesh.zigzet(0, w-1, sx);
             src.getRows(w - ix - 1, rowBuf);
             const u0 = (ix * w_), u1 = ((ix + 1) * w_);
             const qu = [u0, u1].map(u => ({
@@ -482,7 +481,7 @@ class polyview extends polybase {
                 y1: p3.y + (p2.y - p3.y) * u,
             }))
             for (let sy = 0; sy < h; sy++) {
-                const iy = Polymesh.zigzet(0, h-1, sy, center)
+                const iy = Polymesh.zigzet(0, h-1, sy)
                 const color = rowBuf[iy];
                 if (color === 0) continue; // transparent
                 const v0 = (iy * h_), v1 = ((iy + 1) * h_);
@@ -493,8 +492,8 @@ class polyview extends polybase {
                 }))
                 if (qv.every(v => this.isOutOfArea(v.x, v.y))) continue; // skipped if out of screen
                 // stamp 2 triangles by pixel
-                this.fillTriangle(to, qv[1].x, qv[1].y, qv[0].x, qv[0].y, qv[3].x, qv[3].y, color, z);
-                this.fillTriangle(to, qv[2].x, qv[2].y, qv[0].x, qv[0].y, qv[3].x, qv[3].y, color, z);
+                this.fillTriangle(qv[1].x, qv[1].y, qv[0].x, qv[0].y, qv[3].x, qv[3].y, color, z);
+                this.fillTriangle(qv[2].x, qv[2].y, qv[0].x, qv[0].y, qv[3].x, qv[3].y, color, z);
                 //helpers.imageFillPolygon4(to, qd[3].x, qd[3].y, qd[2].x, qd[2].y, qd[0].x, qd[0].y, qd[1].x, qd[1].y, colorIdx);
             }
         }
