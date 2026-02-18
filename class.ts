@@ -1,6 +1,6 @@
 
 class polybase {
-    protected __prop_upd: control.FrameCallback; __del: boolean; protected __unDel: boolean;
+    protected __prop_upd: control.FrameCallback; __del: boolean; protected __unDel: boolean; protected inLoop: boolean;
 
     public init() { }
 
@@ -20,6 +20,7 @@ class polybase {
         this.rot = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, ax: 0, ay: 0, az: 0, fx: 0, fy: 0, fz: 0 };
         this.pos = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, ax: 0, ay: 0, az: 0, fx: 0, fy: 0, fz: 0 };
         this.init();
+        this.inLoop = true;
         this.loop();
     }
 
@@ -235,6 +236,8 @@ class polybase {
 
 class polyview extends polybase {
 
+    render_upd: control.FrameCallback;
+
     zBuffer: Buffer;
     cBuffer: Buffer;
     buf: Buffer;
@@ -243,6 +246,18 @@ class polyview extends polybase {
     width: number;
     height: number;
     far: number;
+
+    __onDel() {
+        control.eventContext().unregisterFrameHandler(this.render_upd)
+        this.zBuffer = null;
+        this.cBuffer = null;
+        this.buf = null;
+        this.img = null;
+        this.width = null;
+        this.height = null;
+        this.near = null;
+        this.far = null;
+    }
 
     private readonly pos2idx = (a: number, r: number, b: number) => (a * r) + b;
 
@@ -463,14 +478,14 @@ class polyview extends polybase {
 
     distortImage(src: Image,
         x0: number, y0: number, x1: number, y1: number, x2: number, y2: number, x3?: number, y3?: number,
-        z?: boolean) {
+        z?: number) {
         this.distortImageUtil(src, { x: x0, y: y0 }, { x: x1, y: y1 }, { x: x2, y: y2 },(isNaN(x3) || isNaN(y3)) ? null : { x: x3, y: y3 }, z)
     }
 
     private distortImageUtil(
         src: Image,
         p0: Polymesh.Pt, p1: Polymesh.Pt, p2: Polymesh.Pt, p3?: Polymesh.Pt,
-        z?: boolean) {
+        z?: number) {
         if (Polymesh.isEmptyImage(src)) return;
         if (!p3) p3 = { x: p2.x + (p1.x - p0.x), y: p2.y + (p1.y - p0.y) };
         const w = src.width, h = src.height;
@@ -505,6 +520,12 @@ class polyview extends polybase {
         }
     }
 
+    update() {
+        this.reset();
+        for (const msh of Polymesh.meshAny()) this.computeMsh(msh);
+        this.render();
+    }
+
     computeMsh(msh: polymesh) {
         if (msh.isDel()) return;
         if (!msh || msh.points.length <= 0 || msh.faces.length <= 0) return;
@@ -532,34 +553,36 @@ class polyview extends polybase {
             y += (y === 0 ? 0 : vsum);
             z += (z === 0 ? 0 : vsum);
             // Perspective
-            const scale = Math.abs(dist) / (Math.abs(dist) + z);
+            const scale = Math.abs(this.near) / (Math.abs(this.near) + z);
             return {
-                x:  centerX + x * scale * zoom,
-                y:  centerY + y * scale * zoom,
+                x:  centerX + x * scale * Polymesh.zoom,
+                y:  centerY + y * scale * Polymesh.zoom,
                 z:  z,
                 x_: v.x,
                 y_: v.y,
                 z_: v.z,
             };
-        }) as Vector3_[];
+        }) as Polymesh.Vector3_[];
+
+        const tris = msh.vfaces;
 
         // Render
         let cx: number, cy: number, range: number, square: number, im: Image
         for (let i = 0;i < tris.length;i++) {
             const t = tris[i]
             const inds = t.indices;
-            if (inds.some(i => (rotated[i].z < -Math.abs(dist) || (fardist > 0 && rotated[i].z > Math.abs(fardist))))) continue;
+            if (inds.some(i => (rotated[i].z < -Math.abs(this.near) || (this.far > 0 && rotated[i].z > Math.abs(this.far))))) continue;
             const aZ = Polymesh.avgZ(rotated, inds);
             const inds_ = [];
             if (inds.length > 2) inds_[0] = [t.indices[0], t.indices[1], t.indices[2]];
             if (inds.length > 3) inds_[1] = [t.indices[3], t.indices[1], t.indices[2]];
-            const scale = (Math.abs(dist) / (Math.abs(dist) + Polymesh.avgZ(rotated, t.indices)));
+            const scale = (Math.abs(this.near) / (Math.abs(this.near) + Polymesh.avgZ(rotated, t.indices)));
             // LOD calculating?
             if (t.img) {
                 im = t.img.clone();
                 if (msh.flag.texStream) {
-                    const scaleD = (scale * zoom)
-                    im = t.imgs[Math.clamp(0, t.imgs.length - 1, Math.trunc((Math.sqrt(scaleD / 1.5) * PHI) * (t.imgs.length - 1)))]
+                    const scaleD = (scale * Polymesh.zoom)
+                    im = t.imgs[Math.clamp(0, t.imgs.length - 1, Math.trunc((Math.sqrt(scaleD / 1.5) * Polymesh.PHI) * (t.imgs.length - 1)))]
                     if (im == null) im = image.create(1, 1)
                 }
             }
@@ -578,13 +601,13 @@ class polyview extends polybase {
                     { x: cx, y: cy },
                 ]
 
-                square = dist + (2048 * (scale * t.scale) * zoom)
+                square = this.near + (2048 * (scale * t.scale) * Polymesh.zoom)
                 if (im) {
                     // set scale image from camera distance
                     const baseW = im.width;
                     const baseH = im.height;
-                    const halfW = (baseW / 3) * scale * t.scale * zoom;
-                    const halfH = (baseH / 3) * scale * t.scale * zoom;
+                    const halfW = (baseW / 3) * scale * t.scale * Polymesh.zoom;
+                    const halfH = (baseH / 3) * scale * t.scale * Polymesh.zoom;
 
                     bq[0].x += halfW, bq[0].y += halfH
                     bq[1].x -= halfW, bq[1].y += halfH
@@ -615,24 +638,24 @@ class polyview extends polybase {
             cx = pt.x;
             cy = pt.y;
 
-            square = dist + (2048 * (scale * t.scale) * zoom)
+            square = this.near + (2048 * (scale * t.scale) * Polymesh.zoom)
 
-            let halfW = square + dist;
-            let halfH = square + dist;
+            let halfW = square + this.near;
+            let halfH = square + this.near;
 
             if (t.img) {
                 // set scale image from camera distance
                 const baseW = im.width;
                 const baseH = im.height;
 
-                halfW = (baseW / 3) * scale * t.scale * zoom;
-                halfH = (baseH / 3) * scale * t.scale * zoom;
+                halfW = (baseW / 3) * scale * t.scale * Polymesh.zoom;
+                halfH = (baseH / 3) * scale * t.scale * Polymesh.zoom;
 
                 square = Polymesh.gcd(halfW, halfH)
             };
             // when have 2D image billboard (indices.length == 1 and img)
             if (t.indices.length === 1) {
-                if (pt.z < -Math.abs(dist)) continue;
+                if (pt.z < -Math.abs(this.near)) continue;
 
                 // when no image
                 if (!t.img) { /*fillCircleImage(output, cx, cy, square, t.color);*/ continue; }
@@ -658,11 +681,11 @@ class polyview extends polybase {
 
             if (inds.length < 2) continue;
             // Draw line canvas when have line color index
-            if (lineren) {
+            if (0/*msh.flag.line*/) {
                 this.drawLine(rotated[inds[0]].x, rotated[inds[0]].y, rotated[inds[1]].x, rotated[inds[1]].y, t.color, aZ);
                 if (inds.length < 3) continue;
                 this.drawLine(rotated[inds[0]].x, rotated[inds[0]].y, rotated[inds[2]].x, rotated[inds[2]].y, t.color, aZ);
-                if (inds.length > 3) this.drawLine(rotated[inds[3]].x, rotated[inds[3]].y, rotated[inds[1]].x, rotated[inds[1]].y, t.color, aZ), this.drawLine(output, rotated[inds[3]].x, rotated[inds[3]].y, rotated[inds[2]].x, rotated[inds[2]].y, t.color, aZ);
+                if (inds.length > 3) this.drawLine(rotated[inds[3]].x, rotated[inds[3]].y, rotated[inds[1]].x, rotated[inds[1]].y, t.color, aZ), this.drawLine(rotated[inds[3]].x, rotated[inds[3]].y, rotated[inds[2]].x, rotated[inds[2]].y, t.color, aZ);
                 else this.drawLine(rotated[inds[1]].x, rotated[inds[1]].y, rotated[inds[2]].x, rotated[inds[2]].y, t.color, aZ);
                 continue;
             }
@@ -720,8 +743,9 @@ class polyview extends polybase {
 
     render() {
         for (let x = 0; x < this.width; x++) {
-            this.buf.write(-(x * this.height), this.cBuffer);
-            this.img.setRows(x, this.buf)
+            this.img.getRows(x, this.buf);
+            for (let y = 0; y < this.height; y++) if (this.cBuffer[(x * this.height) + y]) this.buf[y] = this.cBuffer[(x * this.height) + y];
+            this.img.setRows(x, this.buf);
         }
     }
 
@@ -729,6 +753,12 @@ class polyview extends polybase {
         this.zBuffer.fill(0);
         this.cBuffer.fill(0);
         this.img.fill(0);
+    }
+
+    __onLoop() {
+        this.render_upd = control.eventContext().registerFrameHandler(scene.PHYSICS_PRIORITY, () => {
+            if (this.inLoop) this.update();
+        })
     }
 
     constructor(undel?: boolean) {
