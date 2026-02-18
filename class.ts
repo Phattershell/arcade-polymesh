@@ -235,6 +235,8 @@ class polybase {
 
 class polyview extends polybase {
 
+    private inLoop: boolean;
+
     zBuffer: Buffer;
     cBuffer: Buffer;
     buf: Buffer;
@@ -245,6 +247,7 @@ class polyview extends polybase {
     far: number;
 
     __onLoop() {
+        if (!this.inLoop) return;
         this.reset();
         this.update();
         this.render();
@@ -283,6 +286,7 @@ class polyview extends polybase {
     }
 
     drawLine(x0: number, y0: number, x1: number, y1: number, color: number, z?: number) {
+        if (isNaN(x0) || isNaN(y0) || isNaN(x1) || isNaN(y1)) return;
         color &= 0xF;
         if (x0 === x1 && y0 === y1) { this.setDot(x0, y0, z, color); return; }
         const w = this.width;
@@ -343,7 +347,7 @@ class polyview extends polybase {
     }
 
     // คืน bounding box ที่ clip กับภาพแล้ว [minX, maxX, minY, maxY]
-    getClippedBounds(
+    private getClippedBounds(
         xCoords: number[],  // x ของจุดต่าง ๆ
         yCoords: number[]   // y ของจุดต่าง ๆ
     ): number[] {
@@ -404,6 +408,7 @@ class polyview extends polybase {
         x2: number, y2: number,
         color: number, z?: number
     ) {
+        if (isNaN(x0) || isNaN(y0) || isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2)) return;
         color &= 0xF;
         const w = this.width;
         const h = this.height;
@@ -470,6 +475,7 @@ class polyview extends polybase {
     distortImage(src: Image,
         x0: number, y0: number, x1: number, y1: number, x2: number, y2: number, x3?: number, y3?: number,
         z?: number) {
+        if (isNaN(x0) || isNaN(y0) || isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2) || isNaN(x3) || isNaN(y3)) return;
         this.distortImageUtil(src, { x: x0, y: y0 }, { x: x1, y: y1 }, { x: x2, y: y2 },(isNaN(x3) || isNaN(y3)) ? null : { x: x3, y: y3 }, z)
     }
 
@@ -748,6 +754,7 @@ class polyview extends polybase {
         super(undel);
         this.setScene(scene.backgroundImage());
         this.setRenderRange(Polymesh.dist, Polymesh.fardist);
+        this.inLoop = true;
     }
 
 }
