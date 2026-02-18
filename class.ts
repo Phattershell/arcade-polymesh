@@ -271,6 +271,36 @@ class polyview extends polybase {
         this.zBuffer[i] = zUint8;
     }
 
+    drawLine(x0: number, y0: number, x1: number, y1: number, z: number, color: number, idx?: number) {
+        color &= 0xF;
+        if (x0 === x1 && y0 === y1) { this.setDot(fxpic, x0, y0, z, color); return; }
+        const w = this.width;
+        const h = this.height;
+        const iw = idx * w;
+        if ((x0 < 0 && x1 < 0) || (x0 >= w && x1 >= w) ||
+            (y0 < 0 && y1 < 0) || (y0 >= h && y1 >= h)) return;
+
+        let dx = Math.abs(x1 - x0);
+        let dy = Math.abs(y1 - y0);
+        let sx = Math.clamp(-1, 1, x1 - x0);
+        let sy = Math.clamp(-1, 1, y1 - y0);
+        let err = dx - dy;
+
+        while (1) {
+            if (((sx < 0 && x0 < 0) || (sx > 0 && x0 >= w) && sx !== 0) ||
+                ((sy < 0 && y0 < 0) || (sy > 0 && y0 >= h) && sy !== 0)) break;
+            this.setDot(fxpic, x0, y0, z, color);
+
+            // ตรวจทิศทาง + เกินจุดหมายหรือยัง (ป้องกัน overflow)
+            if (((sx > 0 && x0 >= x1) || (sx < 0 && x0 <= x1) && sx !== 0) ||
+                ((sy > 0 && y0 >= y1) || (sy < 0 && y0 <= y1) && sy !== 0)) break;
+
+            let e2 = err << 1;
+            if (e2 > -dy) { err -= dy; x0 += sx; }
+            if (e2 < dx) { err += dx; y0 += sy; }
+        }
+    }
+
     getPixel(x: number, y: number) {
         return this.cBuffer[this.pos2idx(x, this.height, y)]
     }
