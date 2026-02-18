@@ -266,17 +266,17 @@ class polyview extends polybase {
         return Math.map(z, this.near, this.far, 0x00, 0xff) >> 0;
     }
 
-    setDot(x: number, y: number, z: number, c: number) {
+    setDot(x: number, y: number, c: number, z?: number) {
         if (this.isOutOfArea(x, y)) return;
         const i = this.pos2idx(x, this.height, y);
-        const zUint8 = this.distToUint8(z);
-        if (z <= 0x00 || z >= 0xff) return;
-        if (this.zBuffer[i] > zUint8) return;
+        const zUint8 = z ? this.distToUint8(z) : 0;
+        if (z && (zUint8 <= 0x00 || zUint8 >= 0xff)) return;
+        if (z && (this.zBuffer[i] > zUint8)) return;
+        if (z) this.zBuffer[i] = zUint8;
         this.cBuffer[i] = c;
-        this.zBuffer[i] = zUint8;
     }
 
-    drawLine(x0: number, y0: number, x1: number, y1: number, z: number, color: number, idx?: number) {
+    drawLine(x0: number, y0: number, x1: number, y1: number, color: number, z?: number) {
         color &= 0xF;
         if (x0 === x1 && y0 === y1) { this.setDot(fxpic, x0, y0, z, color); return; }
         const w = this.width;
@@ -294,7 +294,7 @@ class polyview extends polybase {
         while (1) {
             if (((sx < 0 && x0 < 0) || (sx > 0 && x0 >= w) && sx !== 0) ||
                 ((sy < 0 && y0 < 0) || (sy > 0 && y0 >= h) && sy !== 0)) break;
-            this.setDot(fxpic, x0, y0, z, color);
+            this.setDot(fxpic, x0, y0, color, z);
 
             // ตรวจทิศทาง + เกินจุดหมายหรือยัง (ป้องกัน overflow)
             if (((sx > 0 && x0 >= x1) || (sx < 0 && x0 <= x1) && sx !== 0) ||
@@ -306,15 +306,15 @@ class polyview extends polybase {
         }
     }
 
-    setRows(x: number, src: Buffer, z: number) {
-        const zUint8 = this.distToUint8(z);
-        if (zUint8 <= 0x00 || zUint8 >= 0xff) return;
+    setRows(x: number, src: Buffer, z?: number) {
+        const zUint8 = z ? this.distToUint8(z) : 0;
+        if (z && (zUint8 <= 0x00 || zUint8 >= 0xff)) return;
         const n = x * this.height;
         const m = Math.min(this.height, src.length)
         for (let i = 0; i < m; i++) {
             const i_n = i + n;
-            if (this.zBuffer[i_n] > zUint8) continue;
-            this.zBuffer[i_n] = zUint8;
+            if (z && (this.zBuffer[i_n] > zUint8)) continue;
+            if (z) this.zBuffer[i_n] = zUint8;
             this.cBuffer[i_n] = src[i];
         }
     }
@@ -385,20 +385,19 @@ class polyview extends polybase {
         x0: number, y0: number,
         x1: number, y1: number,
         x2: number, y2: number,
-        z: number, color: number
+        color: number, z?: number
     ) {
-        this.drawLine(fxpic, x1, y1, x0, y0, z, color, idx);
-        this.drawLine(fxpic, x2, y2, x1, y1, z, color, idx);
-        this.drawLine(fxpic, x0, y0, x2, y2, z, color, idx);
+        this.drawLine(fxpic, x1, y1, x0, y0, color, z);
+        this.drawLine(fxpic, x2, y2, x1, y1, color, z);
+        this.drawLine(fxpic, x0, y0, x2, y2, color, z);
     }
 
     fillTriangle(
         x0: number, y0: number,
         x1: number, y1: number,
         x2: number, y2: number,
-        z: number, color: number
+        color: number, z?: number
     ) {
-
         color &= 0xF;
         const w = this.width;
         const h = this.height;
@@ -419,7 +418,7 @@ class polyview extends polybase {
         const rowBuf = pins.createBuffer(h);
 
         for (let x = Math.max(0, minX | 0); x <= Math.min(w - 1, maxX | 0); x++) {
-            this.getRows(idx + x, rowBuf);
+            this.getRows(idx + x, this.buf);
 
             // หา y range สำหรับ x นี้ (intersect กับ 3 ขอบ)
             let yStart = h;
@@ -456,8 +455,8 @@ class polyview extends polybase {
             if (yStart <= yEnd) {
                 const clipYStart = Math.max(minY, Math.ceil(yStart));
                 const clipYEnd = Math.min(maxY, Math.floor(yEnd));
-                for (let y = clipYStart; y <= clipYEnd; y++) if (rowBuf[y] !== color) rowBuf[y] = color;
-                this.setRows(x, rowBuf);
+                for (let y = clipYStart; y <= clipYEnd; y++) if (this.buf[y] !== color) this.buf[y] = color;
+                this.setRows(x, this.buf, z);
             }
         }
     }
