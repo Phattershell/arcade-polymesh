@@ -307,6 +307,7 @@ class polyview extends polybase {
     }
 
     setRows(x: number, src: Buffer, z?: number) {
+        if (this.isOutOfRange(x, this.width)) return;
         const zUint8 = z ? this.distToUint8(z) : 0;
         if (z && (zUint8 <= 0x00 || zUint8 >= 0xff)) return;
         const n = x * this.height;
