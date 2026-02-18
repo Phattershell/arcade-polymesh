@@ -248,7 +248,7 @@ class polyview extends polybase {
 
     private readonly isOutOfRange = (n: number, r: number) => (n < 0 || n >= r);
     private isOutOfArea(x: number, y: number) { return (this.isOutOfRange(x, this.width) || this.isOutOfRange(y, this.height)) };
-    private isOutOfAreas(xs: number[], ys: number[]) { return xs.some((_, i) => this.isOutOfRange(xs[i], ys[i]))};
+    private isOutOfAreas(xs: number[], ys: number[]) { return xs.every((_, i) => this.isOutOfRange(xs[i], ys[i]))};
 
     setScene(img: Image) {
         if (!this.img) this.img = img, this.zBuffer = pins.createBuffer(this.img.width * this.img.height), this.cBuffer = pins.createBuffer(this.img.width * this.img.height), this.width = this.img.width, this.height = this.img.height, this.buf = pins.createBuffer(this.height);
@@ -458,6 +458,44 @@ class polyview extends polybase {
                 const clipYEnd = Math.min(maxY, Math.floor(yEnd));
                 for (let y = clipYStart; y <= clipYEnd; y++) if (this.buf[y] !== color) this.buf[y] = color;
                 this.setRows(x, this.buf, z);
+            }
+        }
+    }
+
+    distortImage(
+        src: Image,
+        p0: Pt, p1: Pt, p2: Pt, p3?: Pt,
+        z?: boolean) {
+        if (Polymesh.isEmptyImage(src)) return;
+        if (!p3) p3 = { x: p2.x + (p1.x - p0.x), y: p2.y + (p1.y - p0.y) };
+        const w = src.width, h = src.height;
+        const w_ = (1 / w), h_ = (1 / h);
+        const rowBuf = pins.createBuffer(h)
+        for (let sx = 0; sx < w; sx++) {
+            const ix = Polymesh.zigzet(0, w-1, sx, center);
+            src.getRows(w - ix - 1, rowBuf);
+            const u0 = (ix * w_), u1 = ((ix + 1) * w_);
+            const qu = [u0, u1].map(u => ({
+                x0: p0.x + (p1.x - p0.x) * u,
+                y0: p0.y + (p1.y - p0.y) * u,
+                x1: p3.x + (p2.x - p3.x) * u,
+                y1: p3.y + (p2.y - p3.y) * u,
+            }))
+            for (let sy = 0; sy < h; sy++) {
+                const iy = Polymesh.zigzet(0, h-1, sy, center)
+                const color = rowBuf[iy];
+                if (color === 0) continue; // transparent
+                const v0 = (iy * h_), v1 = ((iy + 1) * h_);
+                // Map quad on 1 pixel
+                const qv = [v0, v0, v1, v1].map((v, i) => ({
+                    x: Math.trunc(qu[i % 2].x0 + (qu[i % 2].x1 - qu[i % 2].x0) * v),
+                    y: Math.trunc(qu[i % 2].y0 + (qu[i % 2].y1 - qu[i % 2].y0) * v)
+                }))
+                if (qv.every(v => this.isOutOfArea(v.x, v.y))) continue; // skipped if out of screen
+                // stamp 2 triangles by pixel
+                this.fillTriangle(to, qv[1].x, qv[1].y, qv[0].x, qv[0].y, qv[3].x, qv[3].y, color, z);
+                this.fillTriangle(to, qv[2].x, qv[2].y, qv[0].x, qv[0].y, qv[3].x, qv[3].y, color, z);
+                //helpers.imageFillPolygon4(to, qd[3].x, qd[3].y, qd[2].x, qd[2].y, qd[0].x, qd[0].y, qd[1].x, qd[1].y, colorIdx);
             }
         }
     }
