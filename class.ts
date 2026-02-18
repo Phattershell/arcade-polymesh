@@ -419,7 +419,7 @@ class polyview extends polybase {
         const rowBuf = pins.createBuffer(h);
 
         for (let x = Math.max(0, minX | 0); x <= Math.min(w - 1, maxX | 0); x++) {
-            fximgGetRows(fxpic, idx + x, rowBuf, h);
+            this.getRows(idx + x, rowBuf);
 
             // หา y range สำหรับ x นี้ (intersect กับ 3 ขอบ)
             let yStart = h;
@@ -457,7 +457,7 @@ class polyview extends polybase {
                 const clipYStart = Math.max(minY, Math.ceil(yStart));
                 const clipYEnd = Math.min(maxY, Math.floor(yEnd));
                 for (let y = clipYStart; y <= clipYEnd; y++) if (rowBuf[y] !== color) rowBuf[y] = color;
-                fximgSetRows(fxpic, idx + x, rowBuf, h);
+                this.setRows(x, rowBuf);
             }
         }
     }
