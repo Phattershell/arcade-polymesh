@@ -507,21 +507,21 @@ class polyview extends polybase {
 
     computeMsh(msh: polymesh) {
         if (msh.isDel()) return;
-        if (!msh || !output || msh.points.length <= 0 || msh.faces.length <= 0) return;
+        if (!msh || msh.points.length <= 0 || msh.faces.length <= 0) return;
         if (msh.flag.invisible) return;
 
-        const centerX = Math.idiv(output.width, 2), centerY = Math.idiv(output.height, 2);
+        const centerX = this.width >>> 1, centerY = this.height >>> 1;
 
         let tmp = 0
-        const cosX = Math.cos(camview.rot.x), sinX = Math.sin(camview.rot.x);
-        const cosY = Math.cos(camview.rot.y), sinY = Math.sin(camview.rot.y);
-        const cosZ = Math.cos(camview.rot.z), sinZ = Math.sin(camview.rot.z);
+        const cosX = Math.cos(this.rot.x), sinX = Math.sin(this.rot.x);
+        const cosY = Math.cos(this.rot.y), sinY = Math.sin(this.rot.y);
+        const cosZ = Math.cos(this.rot.z), sinZ = Math.sin(this.rot.z);
 
         // Transform vertices
         const rotated = msh.pointCam((v) => {
-            let x = v.x - camview.pos.x;
-            let y = v.y - camview.pos.y;
-            let z = v.z - camview.pos.z;
+            let x = v.x - this.pos.x;
+            let y = v.y - this.pos.y;
+            let z = v.z - this.pos.z;
             tmp = x * cosY + z * sinY, z = -x * sinY + z * cosY, x = tmp; // --- rotate around y ---
             tmp = y * cosX - z * sinX, z =  y * sinX + z * cosX, y = tmp; // --- rotate around x ---
             tmp = x * cosZ - y * sinZ, y =  x * sinZ + y * cosZ, x = tmp; // --- rotate around z ---
