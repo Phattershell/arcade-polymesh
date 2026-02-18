@@ -1,6 +1,6 @@
 
 class polybase {
-    protected __prop_upd: control.FrameCallback; __del: boolean; protected __unDel: boolean; protected inLoop: boolean;
+    protected __prop_upd: control.FrameCallback; __del: boolean; protected __unDel: boolean;
 
     public init() { }
 
@@ -20,7 +20,6 @@ class polybase {
         this.rot = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, ax: 0, ay: 0, az: 0, fx: 0, fy: 0, fz: 0 };
         this.pos = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, ax: 0, ay: 0, az: 0, fx: 0, fy: 0, fz: 0 };
         this.init();
-        this.inLoop = true;
         this.loop();
     }
 
@@ -236,8 +235,6 @@ class polybase {
 
 class polyview extends polybase {
 
-    render_upd: control.FrameCallback;
-
     zBuffer: Buffer;
     cBuffer: Buffer;
     buf: Buffer;
@@ -247,16 +244,10 @@ class polyview extends polybase {
     height: number;
     far: number;
 
-    __onDel() {
-        control.eventContext().unregisterFrameHandler(this.render_upd)
-        this.zBuffer = null;
-        this.cBuffer = null;
-        this.buf = null;
-        this.img = null;
-        this.width = null;
-        this.height = null;
-        this.near = null;
-        this.far = null;
+    __onLoop() {
+        this.reset();
+        this.update();
+        this.render();
     }
 
     private readonly pos2idx = (a: number, r: number, b: number) => (a * r) + b;
@@ -278,7 +269,7 @@ class polyview extends polybase {
     private distToUint8(z: number) {
         if (z < this.near) return 0x00;
         if (z > this.far) return 0xff
-        return Math.map(z, this.near, this.far, 0x00, 0xff) >> 0;
+        return Math.map(z, -Math.abs(this.near), Math.abs(this.far), 0x00, 0xff) >> 0;
     }
 
     setDot(x: number, y: number, c: number, z?: number) {
@@ -520,12 +511,6 @@ class polyview extends polybase {
         }
     }
 
-    update() {
-        this.reset();
-        for (const msh of Polymesh.meshAny()) this.computeMsh(msh);
-        this.render();
-    }
-
     computeMsh(msh: polymesh) {
         if (msh.isDel()) return;
         if (!msh || msh.points.length <= 0 || msh.faces.length <= 0) return;
@@ -603,7 +588,7 @@ class polyview extends polybase {
 
                 square = this.near + (2048 * (scale * t.scale) * Polymesh.zoom)
                 if (im) {
-                    // set scale image from camera distance
+                    // set scale image from camera this.nearance
                     const baseW = im.width;
                     const baseH = im.height;
                     const halfW = (baseW / 3) * scale * t.scale * Polymesh.zoom;
@@ -644,7 +629,7 @@ class polyview extends polybase {
             let halfH = square + this.near;
 
             if (t.img) {
-                // set scale image from camera distance
+                // set scale image from camera this.nearance
                 const baseW = im.width;
                 const baseH = im.height;
 
@@ -667,7 +652,7 @@ class polyview extends polybase {
                 halfH /= 1.5;
 
                 // Draw Simple 2D image (billboard) as quad pixel on image
-                // use distortImage or drawing without perspective distortion
+                // use distortImage or drawing without perspective this.nearortion
                 // I will use distortImage draw as vertex quad
                 this.distortImage(im,
                     cx + halfW, cy - halfH,
@@ -681,14 +666,14 @@ class polyview extends polybase {
 
             if (inds.length < 2) continue;
             // Draw line canvas when have line color index
-            if (0/*msh.flag.line*/) {
+            /*if (0) {
                 this.drawLine(rotated[inds[0]].x, rotated[inds[0]].y, rotated[inds[1]].x, rotated[inds[1]].y, t.color, aZ);
                 if (inds.length < 3) continue;
                 this.drawLine(rotated[inds[0]].x, rotated[inds[0]].y, rotated[inds[2]].x, rotated[inds[2]].y, t.color, aZ);
                 if (inds.length > 3) this.drawLine(rotated[inds[3]].x, rotated[inds[3]].y, rotated[inds[1]].x, rotated[inds[1]].y, t.color, aZ), this.drawLine(rotated[inds[3]].x, rotated[inds[3]].y, rotated[inds[2]].x, rotated[inds[2]].y, t.color, aZ);
                 else this.drawLine(rotated[inds[1]].x, rotated[inds[1]].y, rotated[inds[2]].x, rotated[inds[2]].y, t.color, aZ);
                 continue;
-            }
+            } */
             if (t.color > 0) {
                 // Draw line when no shape
                 if (inds.length < 3) {
@@ -741,29 +726,28 @@ class polyview extends polybase {
         }
     }
 
+    update() {
+        for (const msh of Polymesh.meshAny()) this.computeMsh(msh);
+    }
+
     render() {
         for (let x = 0; x < this.width; x++) {
-            this.img.getRows(x, this.buf);
-            for (let y = 0; y < this.height; y++) if (this.cBuffer[(x * this.height) + y]) this.buf[y] = this.cBuffer[(x * this.height) + y];
-            this.img.setRows(x, this.buf);
+            this.img.getRows(x, this.buf)
+            this.buf.write(-(x * this.height), this.cBuffer);
+            this.img.setRows(x, this.buf)
         }
     }
 
     reset() {
         this.zBuffer.fill(0);
-        this.cBuffer.fill(0);
-        this.img.fill(0);
-    }
-
-    __onLoop() {
-        this.render_upd = control.eventContext().registerFrameHandler(scene.PHYSICS_PRIORITY, () => {
-            if (this.inLoop) this.update();
-        })
+        this.cBuffer.fill(scene.backgroundColor());
+        this.img.fill(scene.backgroundColor());
     }
 
     constructor(undel?: boolean) {
         super(undel);
-        this.setScene(scene.backgroundImage())
+        this.setScene(scene.backgroundImage());
+        this.setRenderRange(Polymesh.dist, Polymesh.fardist);
     }
 
 }
@@ -925,7 +909,7 @@ class polymesh extends polybase {
         Polymesh.__meshes_del(this);
     }
 
-    //% blockId=poly_dist_del
+    //% blockId=poly_this.near_del
     //% blockNamespace=Polymesh
     //% block="delete $this"
     //% this.shadow=variables_get this.defl=myMesh
@@ -935,7 +919,7 @@ class polymesh extends polybase {
         super.del();
     }
 
-    //% blockId=poly_dist_isdel
+    //% blockId=poly_this.near_isdel
     //% blockNamespace=Polymesh
     //% block=" $this is deleted"
     //% this.shadow=variables_get this.defl=myMesh
@@ -945,9 +929,9 @@ class polymesh extends polybase {
         return super.isDel();
     }
 
-    //% blockId=poly_dist_zdist
+    //% blockId=poly_this.near_zDist
     //% blockNamespace=Polymesh
-    //% block=" $this get view distance"
+    //% block=" $this get view this.nearance"
     //% this.shadow=variables_get this.defl=myMesh
     //% group="Mesh util"
     //% weight=7
@@ -956,7 +940,7 @@ class polymesh extends polybase {
         return Polymesh.meshDistZ(this) * Polymesh.NORMAL_DIST
     }
 
-    //% blockId=poly_dist_zdepth
+    //% blockId=poly_this.near_zdepth
     //% blockNamespace=Polymesh
     //% block=" $this as Z of depth"
     //% this.shadow=variables_get this.defl=myMesh
@@ -980,9 +964,9 @@ class polymesh extends polybase {
         return Math.sqrt(distSum)
     }
 
-    //% blockId=poly_dist_othermesh
+    //% blockId=poly_this.near_othermesh
     //% blockNamespace=Polymesh
-    //% block=" $this get distance from $otherMesh"
+    //% block=" $this get this.nearance from $otherMesh"
     //% this.shadow=variables_get this.defl=myMesh
     //% otherMesh.shadow=variables_get otherMesh.defl=otherMesh
     //% group="Mesh util"
