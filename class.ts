@@ -1,5 +1,5 @@
 
-class polyview {
+class polybase {
     protected __prop_upd: control.FrameCallback; __del: boolean; protected __unDel: boolean;
 
     public init() { }
@@ -233,7 +233,77 @@ class polyview {
 
 }
 
-class polymesh extends polyview {
+class polyview extends polybase {
+
+    zBuffer: Buffer;
+    cBuffer: Buffer;
+    buf: Buffer;
+    img: Image;
+    near: number;
+    width: number;
+    height: number;
+    far: number;
+
+    private readonly pos2idx = (a: number, r: number, b: number) => (a * r) + b;
+
+    setScene(img: Image) {
+        if (!this.img) this.img = img, this.zBuffer = pins.createBuffer(this.img.width * this.img.height), this.cBuffer = pins.createBuffer(this.img.width * this.img.height), this.width = this.img.width, this.height = this.img.height, this.buf = pins.createBuffer(this.height);
+        else if (this.img.width !== img.width || this.img.height !== img.height) this.img = img, this.zBuffer = pins.createBuffer(this.img.width * this.img.height), this.cBuffer = pins.createBuffer(this.img.width * this.img.height), this.width = this.img.width, this.height = this.img.height, this.buf = pins.createBuffer(this.height);
+    }
+
+    setRenderRange(near: number, far: number) {
+        if (this.near !== near) this.near = near;
+        if (this.far  !== far)  this.far  = far;
+    }
+
+    private distToUint8(z: number) {
+        if (z < this.near) return 0x00;
+        if (z > this.far) return 0xff
+        return Math.map(z, this.near, this.far, 0x00, 0xff) >> 0;
+    }
+
+    setDot(x: number, y: number, z: number, c: number, free?: boolean) {
+        const i = this.pos2idx(x, this.height, y);
+        const zUint8 = this.distToUint8(z);
+        if (z <= 0x00 || z >= 0xff) return;
+        if (!free && this.zBuffer[i] > zUint8) return;
+        this.cBuffer[i] = c;
+        this.zBuffer[i] = zUint8;
+    }
+
+    getPixel(x: number, y: number) {
+        return this.cBuffer[this.pos2idx(x, this.height, y)]
+    }
+
+    getDepth(x: number, y: number) {
+        return this.zBuffer[this.pos2idx(x, this.height, y)]
+    }
+
+    computeMsh(msh: polymesh) {
+        
+    }
+
+    render() {
+        for (let x = 0; x < this.width; x++) {
+            this.buf.write(-(x * this.height), this.cBuffer);
+            this.img.setRows(x, this.buf)
+        }
+    }
+
+    reset() {
+        this.zBuffer.fill(0);
+        this.cBuffer.fill(0);
+        this.img.fill(0);
+    }
+
+    constructor(undel?: boolean) {
+        super(undel);
+        this.setScene(scene.backgroundImage())
+    }
+
+}
+
+class polymesh extends polybase {
 
     faces: Polymesh.Face[]; points: Polymesh.Vector3[]; pivot: Polymesh.Vector3;
     flag: { invisible: boolean, cull: boolean, lod: boolean, texStream: boolean };
