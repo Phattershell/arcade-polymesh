@@ -461,7 +461,13 @@ class polyview extends polybase {
         }
     }
 
-    distortImage(
+    distortImage(src: Image,
+        x0: number, y0: number, x1: number, y1: number, x2: number, y2: number, x3?: number, y3?: number,
+        z?: boolean) {
+        this.distortImageUtil(src, { x: x0, y: y0 }, { x: x1, y: y1 }, { x: x2, y: y2 },(isNaN(x3) || isNaN(y3)) ? null : { x: x3, y: y3 }, z)
+    }
+
+    private distortImageUtil(
         src: Image,
         p0: Polymesh.Pt, p1: Polymesh.Pt, p2: Polymesh.Pt, p3?: Polymesh.Pt,
         z?: boolean) {
