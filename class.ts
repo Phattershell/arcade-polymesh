@@ -240,7 +240,7 @@ class polymesh extends polyview {
     data: {[id: string]: any}; kind: number; idx: number;
 
     set faces(vals: {indices: number[], color: number, offset?: number, scale?: number, img?: Image}[]) {
-        if (vals == null) this._faces = [];
+        if (vals == null) { this._faces = null; return; }
         this._faces = vals.map((v) => (new Polymesh.Face(v.indices, v.color, v.offset, v.scale, v.img)));
     }
 
@@ -249,7 +249,7 @@ class polymesh extends polyview {
     }
 
     set points(vals: {x: number, y: number, z: number}[]) {
-        if (vals == null) this._points = null;
+        if (vals == null) { this._points = null; return; }
         this._points = vals.map((v) => (new Polymesh.Vector3(v.x, v.y, v.z)));
     }
 
@@ -435,8 +435,8 @@ class polymesh extends polyview {
     //% group="Mesh util"
     //% weight=7
     zDist() {
-        if (this.isDel()) return NaN
-        return Polymesh.meshDistZ(this) * Polymesh.NORMAL_DIST
+        if (this.isDel()) return NaN;
+        return Polymesh.meshDistZ(this) * Polymesh.NORMAL_DIST;
     }
 
     //% blockId=poly_dist_zdepth
@@ -446,8 +446,8 @@ class polymesh extends polyview {
     //% group="Mesh util"
     //% weight=6
     zDepth() {
-        if (this.isDel()) return NaN
-        return Polymesh.meshDepthZ(this)
+        if (this.isDel()) return NaN;
+        return Polymesh.meshDepthZ(this);
     }
 
     //% blockId=poly_dist_camera

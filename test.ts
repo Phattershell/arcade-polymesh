@@ -110,10 +110,10 @@ game.onUpdate(function () {
     Polymesh.renderAll(PolyKind.obj, scene.backgroundImage())
 })
 forever(function () {
-    // if (Polymesh.meshAll(PolyKind.obj).length <= 0) setupMesh();
+    //if (Polymesh.meshAll(PolyKind.obj).length <= 0) setupMesh();
     for (let value4 of Polymesh.meshAll(PolyKind.obj)) {
-        // if (value4.getPos(PolyPos.z) < 0 - Polymesh.getCam(PolyCam.dist) * 1.9) value4.del()
-        // if (value4.isDel()) continue;
+        //if (value4.getPos(PolyPos.z) < 0 - Polymesh.getCam(PolyCam.dist) * 1.9) value4.del()
+        //if (value4.isDel()) continue;
         if (value4.getPos(PolyPos.z) < 0 - Polymesh.getCam(PolyCam.dist) * 1.9) {
             value4.setPos(PolyPos.vz, randint(-275, -75))
             value4.data["vzdata"] = value4.getPos(PolyPos.vz) as number
