@@ -534,7 +534,7 @@ class polymesh extends polyview {
     setVertice(idx: number, point3: Polymesh.shadowPoint3) {
         if (this.isDel()) return
         if (Polymesh.isOutOfRange(idx, this.points.length + 1)) return;
-        this._points[idx].x = point3.x, this._points[idx].y = point3.y, this._points[idx].z = point3.z;
+        this._points[idx] = new Polymesh.Vector3(point3.x, point3.y, point3.z);
     }
 
     //% blockId=poly_vertice_add
@@ -577,8 +577,8 @@ class polymesh extends polyview {
         if (inds.i2) indice.push(inds.i2);
         if (inds.i3) indice.push(inds.i3);
         if (inds.i4) indice.push(inds.i4);
-        if (img) this._faces[idx].img = img.clone(); else this._faces[idx].img = null;
-        this._faces[idx].indices = indice, this._faces[idx].color = c, this._faces[idx].offset = clface.oface, this._faces[idx].scale = billscale.scale;
+        this._faces[idx] = new Polymesh.Face(indice, c, clface.oface, billscale.scale, null);
+        if (img) this._faces[idx].img = img.clone();
         this.updFaceImg(idx)
     }
 
