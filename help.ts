@@ -194,11 +194,11 @@ namespace Polymesh {
 
     export function avgZ(rot: Vector3[], inds: number[]) { return (inds.reduce((s, i) => s + rot[i].z, 0) / inds.length); }
 
-    export function avgXYZ(rot: Vector3[], inds: number[]) { return {
-        x: (inds.reduce((s, i) => s + rot[i].x, 0) / inds.length),
-        y: (inds.reduce((s, i) => s + rot[i].y, 0) / inds.length),
-        z: (inds.reduce((s, i) => s + rot[i].z, 0) / inds.length),
-        }; 
+    export function avgXYZ(rot: Vector3[], inds: number[]) { return new Vector3(
+        (inds.reduce((s, i) => s + rot[i].x, 0) / inds.length),
+        (inds.reduce((s, i) => s + rot[i].y, 0) / inds.length),
+        (inds.reduce((s, i) => s + rot[i].z, 0) / inds.length),
+        ); 
     }
 
     export function farZ(rot: Vector3[], inds: number[]) { return (inds.reduce((s, i) => Math.max(s, rot[i].z), rot[0].z)) * inds.length; }
@@ -208,16 +208,18 @@ namespace Polymesh {
     export function isEmptyImage(img: Image) { return img.equals(image.create(img.width, img.height)); }
 
     export function isOutOfAreaOnFace(rotated: { x: number, y: number }[], ind: number[], width: number, height: number) {
-        const avgXYs = { x: ind.reduce((cur, i) => cur + rotated[i].x, 0) / ind.length, y: ind.reduce((cur, i) => cur + rotated[i].y, 0) / ind.length }
+        const avgXYs = new Pt( ind.reduce((cur, i) => cur + rotated[i].x, 0) / ind.length, ind.reduce((cur, i) => cur + rotated[i].y, 0) / ind.length );
         return isOutOfArea(avgXYs.x, avgXYs.y, width, height, 5)
     }
 
     export function isOutOfAreaOnAvg (point2s: { x: number, y: number }[], width: number, height: number) {
-        const avgXYs = { x: point2s.reduce((cur, val) => cur + val.x, 0) / point2s.length, y: point2s.reduce((cur, val) => cur + val.y, 0) / point2s.length }
+        const avgXYs = new Pt( point2s.reduce((cur, val) => cur + val.x, 0) / point2s.length, point2s.reduce((cur, val) => cur + val.y, 0) / point2s.length );
         return isOutOfArea(avgXYs.x, avgXYs.y, width, height, 5)
     }
 
-    interface Pt { x: number; y: number; }
+    class Pt { public x: number; public y: number; constructor(x: number, y: number) { this.x = x; this.y = y; } }
+
+    class Ptl { public x0: number; public y0: number; public x1: number; public y1: number; constructor(x0: number, y0: number, x1: number, y1: number) { this.x0 = x0; this.y0 = y0; this.x1 = x1; this.y1 = y1; } }
 
     const zigzet = (l: number, r: number, n: number, c?: boolean) => {
         if (l + n > r) return NaN;
@@ -233,28 +235,28 @@ namespace Polymesh {
         p0: Pt, p1: Pt, p2: Pt, p3?: Pt,
         center?: boolean) {
         if (Polymesh.isEmptyImage(from)) return;
-        if (!p3) p3 = { x: p2.x + (p1.x - p0.x), y: p2.y + (p1.y - p0.y) };
+        if (!p3) p3 = new Pt(p2.x + (p1.x - p0.x), p2.y + (p1.y - p0.y));
         const w = from.width, h = from.height;
         const w_ = (1 / w), h_ = (1 / h);
         for (let sx = 0; sx < w; sx++) {
             const ix = zigzet(0, w-1, sx, center)
             const u0 = (ix * w_), u1 = ((ix + 1) * w_);
-            const qu = [u0, u1].map(u => ({
-                x0: p0.x + (p1.x - p0.x) * u,
-                y0: p0.y + (p1.y - p0.y) * u,
-                x1: p3.x + (p2.x - p3.x) * u,
-                y1: p3.y + (p2.y - p3.y) * u,
-            }))
+            const qu = [u0, u1].map(u => (new Ptl(
+                p0.x + (p1.x - p0.x) * u,
+                p0.y + (p1.y - p0.y) * u,
+                p3.x + (p2.x - p3.x) * u,
+                p3.y + (p2.y - p3.y) * u,
+            )))
             for (let sy = 0; sy < h; sy++) {
                 const iy = zigzet(0, h-1, sy, center)
                 const color = from.getPixel(w - ix - 1, iy);
                 if (color === 0) continue; // transparent
                 const v0 = (iy * h_), v1 = ((iy + 1) * h_);
                 // Map quad on 1 pixel
-                const qv = [v0, v0, v1, v1].map((v, i) => ({
-                    x: Math.trunc(qu[i % 2].x0 + (qu[i % 2].x1 - qu[i % 2].x0) * v),
-                    y: Math.trunc(qu[i % 2].y0 + (qu[i % 2].y1 - qu[i % 2].y0) * v)
-                }))
+                const qv = [v0, v0, v1, v1].map((v, i) => (new Pt(
+                    Math.trunc(qu[i % 2].x0 + (qu[i % 2].x1 - qu[i % 2].x0) * v),
+                    Math.trunc(qu[i % 2].y0 + (qu[i % 2].y1 - qu[i % 2].y0) * v)
+                )))
                 if (isOutOfAreaOnAvg(qv, to.width, to.height)) if (qv.every(v => isOutOfArea(v.x, v.y, to.width, to.height))) continue; // skipped if out of screen
                 // stamp 2 triangles by pixel
                 helpers.imageFillTriangle(to, qv[1].x, qv[1].y, qv[0].x, qv[0].y, qv[3].x, qv[3].y, color);
@@ -267,7 +269,7 @@ namespace Polymesh {
     export function distortImage(from: Image, to: Image,
         x0: number, y0: number, x1: number, y1: number, x2: number, y2: number, x3?: number, y3?: number,
         center?: boolean) {
-        distortImageUtil(from, to, { x: x0, y: y0 }, { x: x1, y: y1 }, { x: x2, y: y2 },(isNaN(x3) || isNaN(y3)) ? null : { x: x3, y: y3 }, center)
+        distortImageUtil(from, to, new Pt(x0, y0), new Pt(x1, y1), new Pt(x2, y2),(isNaN(x3) || isNaN(y3)) ? null : new Pt(x3, y3), center)
     }
 
     export function fillCircleImage(dest: Image, x: number, y: number, r: number, c: number) {
