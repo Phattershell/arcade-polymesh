@@ -2,6 +2,9 @@
 //% block="Poly mesh" color="#279139" icon="\uf1b2" groups='["Create","Controls","Styling"]'
 namespace Polymesh {
 
+    export class FlagMesh { public invisible: boolean; cull: boolean; lod: boolean; texStream: boolean;
+    constructor() { this.invisible = false; this.cull = false; this.lod = false; this.texStream = false; } }
+
     export class Face { public indices: number[]; public color: number; public offset?: number; public scale?: number; public img?: Image;
     constructor(indices: number[], color: number, offset?: number, scale?: number, img?: Image) {
         this.indices = indices; this.color = color; this.offset = offset; this.scale = scale; this.img = img;

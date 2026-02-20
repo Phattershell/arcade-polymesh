@@ -235,9 +235,27 @@ class polyview {
 
 class polymesh extends polyview {
 
-    faces: Polymesh.Face[]; points: Polymesh.Vector3[]; pivot: Polymesh.Vector3;
-    flag: { invisible: boolean, cull: boolean, lod: boolean, texStream: boolean };
+    _faces: Polymesh.Face[]; _points: Polymesh.Vector3[]; pivot: Polymesh.Vector3;
+    flag: Polymesh.FlagMesh;
     data: {[id: string]: any}; kind: number; idx: number;
+
+    set faces(vals: {indices: number[], color: number, offset?: number, scale?: number, img?: Image}[]) {
+        if (vals == null) this._faces = [];
+        this._faces = vals.map((v) => (new Polymesh.Face(v.indices, v.color, v.offset, v.scale, v.img)));
+    }
+
+    get faces() {
+        return this._faces;
+    }
+
+    set points(vals: {x: number, y: number, z: number}[]) {
+        if (vals == null) this._points = null;
+        this._points = vals.map((v) => (new Polymesh.Vector3(v.x, v.y, v.z)));
+    }
+
+    get points() {
+        return this._points;
+    }
 
     //% blockId=poly_kind_set
     //% blockNamespace=Polymesh
@@ -372,10 +390,10 @@ class polymesh extends polyview {
 
     init() {
         this.data = {};
-        this.faces = [];
-        this.points = [];
+        this._faces = [];
+        this._points = [];
         this.pivot = new Polymesh.Vector3(0, 0, 0);
-        this.flag = { invisible: false, cull: false, lod: false, texStream: false };
+        this.flag = new Polymesh.FlagMesh();
         this.createFacesImgLODcache();
     }
 
@@ -440,7 +458,7 @@ class polymesh extends polyview {
     //% weight=8
     distFromCamera() {
         if (this.isDel()) return NaN
-        const distPos = { x: Polymesh.camview.pos.x - this.pos.x, y: Polymesh.camview.pos.y - this.pos.y, z: Polymesh.camview.pos.z - this.pos.z }
+        const distPos = new Polymesh.Vector3( Polymesh.camview.pos.x - this.pos.x, Polymesh.camview.pos.y - this.pos.y, Polymesh.camview.pos.z - this.pos.z );
         const distSum = (distPos.x * distPos.x) + (distPos.y * distPos.y) + (distPos.z * distPos.z)
         return Math.sqrt(distSum)
     }
@@ -455,7 +473,7 @@ class polymesh extends polyview {
     distBetween(otherMesh: polymesh) {
         if (otherMesh.isDel()) return NaN
         if (this.isDel()) return NaN
-        const distPos = { x: otherMesh.pos.x - this.pos.x, y: otherMesh.pos.y - this.pos.y, z: otherMesh.pos.z - this.pos.z }
+        const distPos = new Polymesh.Vector3( otherMesh.pos.x - this.pos.x, otherMesh.pos.y - this.pos.y, otherMesh.pos.z - this.pos.z )
         const distSum = (distPos.x * distPos.x) + (distPos.y * distPos.y) + (distPos.z * distPos.z)
         return Math.sqrt(distSum)
     }
@@ -468,8 +486,8 @@ class polymesh extends polyview {
     //% weight=10
     normalSpeed() {
         if (this.isDel()) return NaN
-        const distPosV = { vx: this.pos.vx, vy: this.pos.vy, vz: this.pos.vz }
-        const distSum = (distPosV.vx * distPosV.vx) + (distPosV.vy * distPosV.vy) + (distPosV.vz * distPosV.vz)
+        const distPosV = new Polymesh.Vector3(this.pos.vx, this.pos.vy, this.pos.vz)
+        const distSum = (distPosV.x * distPosV.x) + (distPosV.y * distPosV.y) + (distPosV.z * distPosV.z)
         return Math.sqrt(distSum)
     }
 
@@ -483,7 +501,7 @@ class polymesh extends polyview {
         if (this.isDel()) return
         switch (flag) {
             case 0x0: default: this.flag.invisible = ok; break;
-            case 0x1:          this.flag.cull   = ok; break;
+            case 0x1:          this.flag.cull      = ok; break;
             case 0x2:          this.flag.texStream = ok; break;
             case 0x3:          this.flag.lod       = ok; break;
         }
@@ -516,7 +534,7 @@ class polymesh extends polyview {
     setVertice(idx: number, point3: Polymesh.shadowPoint3) {
         if (this.isDel()) return
         if (Polymesh.isOutOfRange(idx, this.points.length + 1)) return;
-        this.points[idx].x = point3.x, this.points[idx].y = point3.y, this.points[idx].z = point3.z;
+        this._points[idx].x = point3.x, this._points[idx].y = point3.y, this._points[idx].z = point3.z;
     }
 
     //% blockId=poly_vertice_add
@@ -528,7 +546,7 @@ class polymesh extends polyview {
     //% weight=9
     addVertice(point3: Polymesh.shadowPoint3) {
         if (this.isDel()) return
-        this.points.push(new Polymesh.Vector3(point3.x, point3.y, point3.z))
+        this._points.push(new Polymesh.Vector3(point3.x, point3.y, point3.z))
     }
 
     //% blockId=poly_vertice_del
@@ -539,8 +557,8 @@ class polymesh extends polyview {
     //% weight=10
     delVertice(idx?: number) {
         if (this.isDel()) return
-        if (idx) this.points.removeAt(idx);
-        else this.points.pop();
+        if (idx) this._points.removeAt(idx);
+        else this._points.pop();
     }
 
     //% blockId=poly_face_set
@@ -559,8 +577,8 @@ class polymesh extends polyview {
         if (inds.i2) indice.push(inds.i2);
         if (inds.i3) indice.push(inds.i3);
         if (inds.i4) indice.push(inds.i4);
-        if (img) this.faces[idx].img = img.clone(); else this.faces[idx].img = null;
-        this.faces[idx].indices = indice, this.faces[idx].color = c, this.faces[idx].offset = clface.oface, this.faces[idx].scale = billscale.scale;
+        if (img) this._faces[idx].img = img.clone(); else this._faces[idx].img = null;
+        this._faces[idx].indices = indice, this._faces[idx].color = c, this._faces[idx].offset = clface.oface, this._faces[idx].scale = billscale.scale;
         this.updFaceImg(idx)
     }
 
@@ -580,8 +598,8 @@ class polymesh extends polyview {
         if (inds.i2) indice.push(inds.i2);
         if (inds.i3) indice.push(inds.i3);
         if (inds.i4) indice.push(inds.i4);
-        if (img) this.faces.push(new Polymesh.Face( indice, c, clface.oface, billscale.scale, img.clone() ));
-        else this.faces.push(new Polymesh.Face( indice, c, clface.oface, billscale.scale, null ));
+        if (img) this._faces.push(new Polymesh.Face( indice, c, clface.oface, billscale.scale, img.clone() ));
+        else this._faces.push(new Polymesh.Face( indice, c, clface.oface, billscale.scale, null ));
         this.updFaceImg(this.faces.length - 1)
     }
 
@@ -593,8 +611,8 @@ class polymesh extends polyview {
     //% weight=9
     delFace(idx?: number) {
         if (this.isDel()) return
-        if (idx) this.faces.removeAt(idx);
-        else this.faces.pop();
+        if (idx) this._faces.removeAt(idx);
+        else this._faces.pop();
     }
 
     //% blockId=poly_getfacecolor
@@ -605,8 +623,8 @@ class polymesh extends polyview {
     //% weight=10
     getFaceColor(idx: number) {
         if (this.isDel()) return NaN
-        if (!this.faces[idx].color) return NaN
-        return this.faces[idx].color
+        if (!this._faces[idx].color) return NaN
+        return this._faces[idx].color
     }
 
     //% blockId=poly_setfacecolor
@@ -617,8 +635,8 @@ class polymesh extends polyview {
     //% weight=9
     setFaceColor(idx: number, c: number) {
         if (this.isDel()) return
-        if (this.faces[idx].color === c) return;
-        this.faces[idx].color = c
+        if (this._faces[idx].color === c) return;
+        this._faces[idx].color = c
     }
 
     //% blockId=poly_getfaceimage
@@ -629,8 +647,8 @@ class polymesh extends polyview {
     //% weight=8
     getFaceImage(idx: number) {
         if (this.isDel()) return null
-        if (!this.faces[idx].img) return null
-        return this.faces[idx].img
+        if (!this._faces[idx].img) return null
+        return this._faces[idx].img
     }
 
     //% blockId=poly_setfaceimage
@@ -642,8 +660,8 @@ class polymesh extends polyview {
     //% weight=7
     setFaceImage(idx: number, img: Image, imgs?: Image[]) {
         if (this.isDel()) return
-        if (this.faces[idx].img && this.faces[idx].img.equals(img)) return;
-        this.faces[idx].img = img
+        if (this._faces[idx].img && this._faces[idx].img.equals(img)) return;
+        this._faces[idx].img = img
         if (imgs) {
             const imgh = Polymesh.hashImage(img);
             if (this.faces_imgs[idx][imgh]) return;
@@ -663,7 +681,7 @@ class polymesh extends polyview {
     clearFaceImage(idx: number) {
         if (this.isDel()) return
         if (!this.faces[idx].img) return;
-        this.faces[idx].img = null
+        this._faces[idx].img = null
         this.resetFacesImgLODcache(idx);
     }
 
@@ -675,8 +693,8 @@ class polymesh extends polyview {
     //% weight=5
     getFaceOffset(idx: number) {
         if (this.isDel()) return NaN
-        if (!this.faces[idx].offset) return NaN
-        return this.faces[idx].offset
+        if (!this._faces[idx].offset) return NaN
+        return this._faces[idx].offset
     }
 
     //% blockId=poly_setfaceoffset
@@ -688,8 +706,8 @@ class polymesh extends polyview {
     //% weight=4
     setFaceOffset(idx: number, oface: number) {
         if (this.isDel()) return
-        if (this.faces[idx].offset === oface) return;
-        this.faces[idx].offset = oface;
+        if (this._faces[idx].offset === oface) return;
+        this._faces[idx].offset = oface;
     }
 
     //% blockId=poly_getfacescale
@@ -700,8 +718,8 @@ class polymesh extends polyview {
     //% weight=5
     getFaceScale(idx: number) {
         if (this.isDel()) return NaN
-        if (!this.faces[idx].scale) return NaN;
-        return this.faces[idx].scale;
+        if (!this._faces[idx].scale) return NaN;
+        return this._faces[idx].scale;
     }
 
     //% blockId=poly_setfacescale
@@ -713,8 +731,8 @@ class polymesh extends polyview {
     //% weight=4
     setFaceScale(idx: number, scale: number) {
         if (this.isDel()) return
-        if (this.faces[idx].scale === scale) return;
-        this.faces[idx].scale = scale;
+        if (this._faces[idx].scale === scale) return;
+        this._faces[idx].scale = scale;
     }
 
     //% blockId=poly_mesh_pivot_set
