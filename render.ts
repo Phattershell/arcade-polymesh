@@ -59,15 +59,12 @@ namespace Polymesh {
             z += (z === 0 ? 0 : vsum);
             // Perspective
             const scale = Math.abs(dist) / (Math.abs(dist) + z);
-            return {
-                x:  centerX + x * scale * zoom,
-                y:  centerY + y * scale * zoom,
-                z:  z,
-                x_: v.x,
-                y_: v.y,
-                z_: v.z,
-            };
-        }) as Vector3_[];
+            return new Vector3(
+                centerX + x * scale * zoom,
+                centerY + y * scale * zoom,
+                z
+            );
+        });
 
         // Sort triangles
         const trisCMP = (a: Polymesh.FaceLOD, b: Polymesh.FaceLOD) => avgZ(rotated, b.indices) - avgZ(rotated, a.indices)

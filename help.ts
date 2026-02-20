@@ -41,11 +41,11 @@ namespace Polymesh {
         tmp = dx * cosZ - dy * sinZ; dy =  dx * sinZ + dy * cosZ; dx = tmp; // --- rotate around z ---
 
         // move back to real position
-        return {
-            x: dx + pivot.x,
-            y: dy + pivot.y,
-            z: dz + pivot.z
-        };
+        return new Vector3 (
+            dx + pivot.x,
+            dy + pivot.y,
+            dz + pivot.z
+        );
     };
 
     export const rotatePoint3Dyxz = (point: Vector3, pivot: Vector3, angle: Vector3) => {
@@ -62,11 +62,11 @@ namespace Polymesh {
         tmp = dy * cosX - dz * sinX, dz =  dy * sinX + dz * cosX, dy = tmp; // --- rotate around x ---
         tmp = dx * cosZ - dy * sinZ, dy =  dx * sinZ + dy * cosZ, dx = tmp; // --- rotate around z ---
         
-        return {
-            x:  dx + pivot.x,
-            y:  dy + pivot.y,
-            z:  dz + pivot.z,
-        };
+        return new Vector3(
+            dx + pivot.x,
+            dy + pivot.y,
+            dz + pivot.z,
+        );
     }
 
     const normalLen3 = (n: number) => Math.sqrt((n * n) + (n * n) + (n * n))
@@ -283,7 +283,8 @@ namespace Polymesh {
 
     export const meshDepthZ = (msh: polymesh) => {
         if (msh.isDel()) return NaN;
-        return rotatePoint3Dyxz(msh.pos, Polymesh.camview.pos, Polymesh.camview.rot).z;
+        const pos = camview.pos, rot = camview.rot;
+        return rotatePoint3Dyxz(new Vector3(msh.pos.x, msh.pos.y, msh.pos.z), new Vector3(pos.x, pos.y, pos.z), new Vector3(rot.x, rot.y, rot.z)).z;
     }
 
     export const meshDistZ = (msh: polymesh) => (Math.abs(dist) / (Math.abs(dist) + meshDepthZ(msh)))

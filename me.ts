@@ -2,11 +2,20 @@
 //% block="Poly mesh" color="#279139" icon="\uf1b2" groups='["Create","Controls","Styling"]'
 namespace Polymesh {
 
-    export interface Face { indices: number[], color: number, offset?: number, scale?: number, img?: Image }
-    export interface FaceLOD { indices: number[], color: number, offset?: number, scale?: number, img?: Image, imgs?: Image[] }
+    export class Face { public indices: number[]; public color: number; public offset?: number; public scale?: number; public img?: Image;
+    constructor(indices: number[], color: number, offset?: number, scale?: number, img?: Image) {
+        this.indices = indices; this.color = color; this.offset = offset; this.scale = scale; this.img = img;
+    } }
+    export class FaceLOD { public indices: number[]; public color: number; public offset?: number; public scale?: number; public img?: Image; public imgs?: Image[];
+    constructor(indices: number[], color: number, offset?: number, scale?: number, img?: Image, imgs?: Image[]) {
+        this.indices = indices; this.color = color; this.offset = offset; this.scale = scale; this.img = img; this.imgs = imgs;
+    } }
 
-    export interface Motion3 { x: number, y: number, z: number, vx: number, vy: number, vz: number, ax: number, ay: number, az: number, fx: number, fy: number, fz: number }
-    export interface Vector3 { x: number, y: number, z: number }
+    export class Motion3 { public x: number; public y: number; public z: number; public vx: number; public vy: number; public vz: number; public ax: number; public ay: number; public az: number; public fx: number; public fy: number; public fz: number;
+    constructor(x: number, y: number, z: number, vx: number, vy: number, vz: number, ax: number, ay: number, az: number, fx: number, fy: number, fz: number) {
+        this.x = x; this.y = y; this.z = z; this.vx = vx; this.vy = vy; this.vz = vz; this.ax = ax; this.ay = ay; this.az = az; this.fx = fx; this.fy = fy; this.fz = fz;
+    } }
+    export class Vector3 { public x: number; public y: number; public z: number; constructor(x: number, y: number, z: number) { this.x = x; this.y = y; this.z = z; } }
     export interface Vector3_ { x: number, y: number, z: number, x_: number, y_: number, z_: number }
 
     const __meshes: polymesh[] = [];

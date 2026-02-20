@@ -17,8 +17,8 @@ class polyview {
     constructor(undel?: boolean) {
         this.__unDel = undel;
         this.__del = false;
-        this.rot = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, ax: 0, ay: 0, az: 0, fx: 0, fy: 0, fz: 0 };
-        this.pos = { x: 0, y: 0, z: 0, vx: 0, vy: 0, vz: 0, ax: 0, ay: 0, az: 0, fx: 0, fy: 0, fz: 0 };
+        this.rot = new Polymesh.Motion3( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
+        this.pos = new Polymesh.Motion3( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
         this.init();
         this.loop();
     }
@@ -54,12 +54,12 @@ class polyview {
         this.rot_fx = Fx8(v.vx); this.rot_fy = Fx8(v.vy); this.rot_fz = Fx8(v.vz);
     }
     get rot(): Polymesh.Motion3 {
-        return {
-            x:  Fx.toFloat(this.rot_x),  y:  Fx.toFloat(this.rot_y),  z:  Fx.toFloat(this.rot_z),
-            vx: Fx.toFloat(this.rot_vx), vy: Fx.toFloat(this.rot_vy), vz: Fx.toFloat(this.rot_vz),
-            ax: Fx.toFloat(this.rot_ax), ay: Fx.toFloat(this.rot_ay), az: Fx.toFloat(this.rot_az),
-            fx: Fx.toFloat(this.rot_fx), fy: Fx.toFloat(this.rot_fy), fz: Fx.toFloat(this.rot_fz),
-        }
+        return new Polymesh.Motion3(
+            Fx.toFloat(this.rot_x),  Fx.toFloat(this.rot_y),  Fx.toFloat(this.rot_z),
+            Fx.toFloat(this.rot_vx), Fx.toFloat(this.rot_vy), Fx.toFloat(this.rot_vz),
+            Fx.toFloat(this.rot_ax), Fx.toFloat(this.rot_ay), Fx.toFloat(this.rot_az),
+            Fx.toFloat(this.rot_fx), Fx.toFloat(this.rot_fy), Fx.toFloat(this.rot_fz),
+        )
     }
 
     protected pos_x:  Fx8; protected pos_y:  Fx8; protected pos_z:  Fx8;
@@ -80,12 +80,12 @@ class polyview {
         this.pos_fx = Fx8(v.vx); this.pos_fy = Fx8(v.vy); this.pos_fz = Fx8(v.vz);
     }
     get pos(): Polymesh.Motion3 {
-        return {
-            x:  Fx.toFloat(this.pos_x),  y:  Fx.toFloat(this.pos_y),  z:  Fx.toFloat(this.pos_z),
-            vx: Fx.toFloat(this.pos_vx), vy: Fx.toFloat(this.pos_vy), vz: Fx.toFloat(this.pos_vz),
-            ax: Fx.toFloat(this.pos_ax), ay: Fx.toFloat(this.pos_ay), az: Fx.toFloat(this.pos_az),
-            fx: Fx.toFloat(this.pos_fx), fy: Fx.toFloat(this.pos_fy), fz: Fx.toFloat(this.pos_fz),
-        }
+        return new Polymesh.Motion3(
+            Fx.toFloat(this.pos_x),  Fx.toFloat(this.pos_y),  Fx.toFloat(this.pos_z),
+            Fx.toFloat(this.pos_vx), Fx.toFloat(this.pos_vy), Fx.toFloat(this.pos_vz),
+            Fx.toFloat(this.pos_ax), Fx.toFloat(this.pos_ay), Fx.toFloat(this.pos_az),
+            Fx.toFloat(this.pos_fx), Fx.toFloat(this.pos_fy), Fx.toFloat(this.pos_fz),
+        )
     }
 
     protected motionUpdatePos(delta: Fx8) {
@@ -345,23 +345,23 @@ class polymesh extends polyview {
     get vfaces(): Polymesh.FaceLOD[] {
         if (this.isDel()) return null
         return this.faces.map((v, i) => {
-            if (v.img) return {
-                    indices: v.indices, color: v.color,
-                    offset: v.offset, scale: v.scale,
-                    img: v.img, imgs: this.faces_imgs[i][Polymesh.hashImage(v.img)] ? this.faces_imgs[i][Polymesh.hashImage(v.img)] : [v.img]
-                };
-            return {
-                indices: v.indices, color: v.color,
-                offset: v.offset, scale: v.scale
-            }
+            if (v.img) return new Polymesh.FaceLOD(
+                    v.indices, v.color,
+                    v.offset, v.scale,
+                    v.img, this.faces_imgs[i][Polymesh.hashImage(v.img)] ? this.faces_imgs[i][Polymesh.hashImage(v.img)] : [v.img]
+                );
+            return new Polymesh.FaceLOD(
+                v.indices, v.color,
+                v.offset, v.scale
+            )
         })
     }
 
     pointCam<T>(f: (v: Polymesh.Vector3) => T|Polymesh.Vector3) {
         return this.points.map(v => {
-            const vpoint = { x: this.pos.x + v.x, y: this.pos.y + v.y, z: this.pos.z + v.z };
-            const vpivot = { x: this.pos.x + this.pivot.x, y: this.pos.y + this.pivot.y, z: this.pos.z + this.pivot.z };
-            return f(Polymesh.rotatePoint3Dxyz(vpoint, vpivot, this.rot));
+            const vpoint = new Polymesh.Vector3(this.pos.x + v.x, this.pos.y + v.y, this.pos.z + v.z );
+            const vpivot = new Polymesh.Vector3(this.pos.x + this.pivot.x, this.pos.y + this.pivot.y, this.pos.z + this.pivot.z );
+            return f(Polymesh.rotatePoint3Dxyz(vpoint, vpivot, new Polymesh.Vector3(this.rot.x, this.rot.y, this.rot.z)));
         })
     };
 
@@ -374,7 +374,7 @@ class polymesh extends polyview {
         this.data = {};
         this.faces = [];
         this.points = [];
-        this.pivot = { x: 0, y: 0, z: 0 };
+        this.pivot = new Polymesh.Vector3(0, 0, 0);
         this.flag = { invisible: false, cull: false, lod: false, texStream: false };
         this.createFacesImgLODcache();
     }
@@ -516,7 +516,7 @@ class polymesh extends polyview {
     setVertice(idx: number, point3: Polymesh.shadowPoint3) {
         if (this.isDel()) return
         if (Polymesh.isOutOfRange(idx, this.points.length + 1)) return;
-        this.points[idx] = { x: point3.x, y: point3.y, z: point3.z }
+        this.points[idx].x = point3.x, this.points[idx].y = point3.y, this.points[idx].z = point3.z;
     }
 
     //% blockId=poly_vertice_add
@@ -528,7 +528,7 @@ class polymesh extends polyview {
     //% weight=9
     addVertice(point3: Polymesh.shadowPoint3) {
         if (this.isDel()) return
-        this.points.push({ x: point3.x, y: point3.y, z: point3.z })
+        this.points.push(new Polymesh.Vector3(point3.x, point3.y, point3.z))
     }
 
     //% blockId=poly_vertice_del
@@ -559,8 +559,8 @@ class polymesh extends polyview {
         if (inds.i2) indice.push(inds.i2);
         if (inds.i3) indice.push(inds.i3);
         if (inds.i4) indice.push(inds.i4);
-        if (img) this.faces[idx] = { indices: indice, color: c, offset: clface.oface, scale: billscale.scale, img: img.clone() };
-        else this.faces[idx] = { indices: indice, color: c, offset: clface.oface, scale: billscale.scale, img: null }
+        if (img) this.faces[idx].img = img.clone(); else this.faces[idx].img = null;
+        this.faces[idx].indices = indice, this.faces[idx].color = c, this.faces[idx].offset = clface.oface, this.faces[idx].scale = billscale.scale;
         this.updFaceImg(idx)
     }
 
@@ -580,8 +580,8 @@ class polymesh extends polyview {
         if (inds.i2) indice.push(inds.i2);
         if (inds.i3) indice.push(inds.i3);
         if (inds.i4) indice.push(inds.i4);
-        if (img) this.faces.push({ indices: indice, color: c, offset: clface.oface, scale: billscale.scale, img: img.clone() });
-        else this.faces.push({ indices: indice, color: c, offset: clface.oface, scale: billscale.scale, img: null });
+        if (img) this.faces.push(new Polymesh.Face( indice, c, clface.oface, billscale.scale, img.clone() ));
+        else this.faces.push(new Polymesh.Face( indice, c, clface.oface, billscale.scale, null ));
         this.updFaceImg(this.faces.length - 1)
     }
 
