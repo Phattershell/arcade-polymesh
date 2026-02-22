@@ -2,6 +2,12 @@
 //% block="Poly mesh" color="#279139" icon="\uf1b2" groups='["Create","Controls","Styling"]'
 namespace Polymesh {
 
+    export class FaceImg { public imgID: String[]; imgDB: Image[][];
+    constructor() { this.reset(); }
+    public reset() { this.imgID = []; this.imgDB = []; }
+    public copy(from: FaceImg) { this.imgID = from.imgID.slice(); this.imgDB = from.imgDB.slice(); };
+    public toHash(img: Image) { return hashImage(img); }
+    }
     export class FlagMesh { public invisible: boolean; cull: boolean; lod: boolean; texStream: boolean;
     constructor() { this.invisible = false; this.cull = false; this.lod = false; this.texStream = false; } }
 

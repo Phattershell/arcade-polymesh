@@ -168,6 +168,17 @@ namespace Polymesh {
             return;
         }
 
+        /* if (1) {
+            distortImage(from, to,
+                to.width, 0,
+                0, 0,
+                0, to.height,
+                to.width, to.height
+            );
+            return;
+        } */
+        const N2 = Polymesh.PHI + 1;
+
         // calculate size ratio
         const scaleX = from.width  / to.width;
         const scaleY = from.height / to.height;
@@ -176,13 +187,13 @@ namespace Polymesh {
         let H_scroll = 0;
         let V_scroll = 0;
         if (center) {
-            H_scroll = ((to.width  - from.width)  * scaleX) / 2;
-            V_scroll = ((to.height - from.height) * scaleY) / 2;
+            H_scroll = ((to.width  - from.width)  * scaleX) / N2;
+            V_scroll = ((to.height - from.height) * scaleY) / N2;
         }
 
         // call mode7img using scale factor
         // A = scaleX * 256, D = scaleY * 256 (in mode7img have divisor as 1/256)
-        mode7img(from, to, -H_scroll, -V_scroll, scaleX * 256, 0, 0, scaleY * 256);
+        mode7img(from, to, -(H_scroll), -(V_scroll), scaleX * 256, 0, 0, scaleY * 256);
     }
 
 

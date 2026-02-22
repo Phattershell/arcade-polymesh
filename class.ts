@@ -280,21 +280,29 @@ class polymesh extends polyview {
     }
 
     protected makeFaceImgStack(idx: number, img: Image) {
-        this.faces_imgs_cache_stack[idx].unshift(img);
+        //if (this.faces_imgs_cache_stack.length - 1 < idx) while (this.faces_imgs_cache_stack.length - 1 < idx) this.faces_imgs_cache_stack.push([]);
+        //this.faces_imgs_cache_stack[idx].unshift(img);
         if (this.faces_imgs_cache_stack[idx].length > 8) {
             const oldImg = this.faces_imgs_cache_stack[idx].pop();
             const oldImgh = Polymesh.hashImage(oldImg);
-            delete this.faces_imgs[idx][oldImgh]
+            const oldidx = this.faces_imgs[idx].imgID.indexOf(oldImgh)
+            this.faces_imgs[idx].imgDB[oldidx] = [];
+            this.faces_imgs[idx].imgID[oldidx] = null;
         }
     }
 
+    protected newFaceImgStack(idx: number, img: Image) {
+        if (this.faces_imgs_cache_stack.length - 1 < idx) while (this.faces_imgs_cache_stack.length - 1 < idx) this.faces_imgs_cache_stack.push([]);
+        this.faces_imgs_cache_stack[idx].unshift(img);
+    }
+
     protected createFacesImgLODcache() {
-        this.faces_imgs = this.faces.map(_ => ({}))
+        this.faces_imgs = this.faces.map(_ => (new Polymesh.FaceImg()))
         this.faces_imgs_cache_stack = this.faces.map(_ => ([]))
     }
 
     protected resetFacesImgLODcache(idx: number) {
-        this.faces_imgs[idx] = {}
+        this.faces_imgs[idx].imgID = [];
         this.faces_imgs_cache_stack[idx] = []
     }
 
@@ -304,8 +312,9 @@ class polymesh extends polyview {
             const cimg = this.faces[i].img
             if (!cimg) return false;
             this.makeFaceImgStack(i, cimg)
-            const imgh = Polymesh.hashImage(cimg)
-            return !v[imgh];
+            const imgh = Polymesh.hashImage(cimg);
+            const hidx = v.imgID.indexOf(imgh)
+            return v.imgID[hidx] != null;
         })
         if (imgNewData.length <= 0) return;
         const imgNewDataInds = imgNewData.map((_, i) => i)
@@ -320,54 +329,59 @@ class polymesh extends polyview {
         if (this.faces_imgs.length === this.faces.length) return;
         if (this.faces.length > this.faces_imgs.length) {
             while (this.faces.length > this.faces_imgs.length) {
-                this.faces_imgs.push({})
+                this.faces_imgs.push( new Polymesh.FaceImg())
             }
         } else if (this.faces.length < this.faces_imgs.length) {
             while (this.faces.length < this.faces_imgs.length) {
                 this.faces_imgs.pop()
             }
         }
-        /*
         const newLODcache = this.faces.map((v, i) => {
-            if (!v.img) return {};
+            if (!v.img) return new Polymesh.FaceImg();
             if (this.faces_imgs[i]) return this.faces_imgs[i];
-            return {};
+            return new Polymesh.FaceImg();
         });
         this.faces_imgs = newLODcache
-        */
     }
 
     protected updFaceImg(idx: number, im?: Image) {
         const cimg = im ? im : (this.faces[idx].img ? this.faces[idx].img : null);
         if (!cimg) return;
-        const square = Polymesh.gcd(cimg.width, cimg.height)
+        const square = Polymesh.gcd(cimg.width, cimg.height) * Math.abs(cimg.width * cimg.height)
         const imgh = Polymesh.hashImage(cimg)
-        if (!this.faces_imgs[idx]) this.faces_imgs[idx] = {}
-        else if (this.faces_imgs[idx][imgh] && this.faces_imgs[idx][imgh][this.faces_imgs[idx][imgh].length - 1].equals(cimg)) return;
-        this.faces_imgs[idx][imgh] = [];
+        if (!this.faces_imgs[idx]) this.faces_imgs[idx] = new Polymesh.FaceImg()
+        let hidx = this.faces_imgs[idx].imgID.indexOf(imgh);
+        if (!this.faces_imgs[idx].imgDB[hidx]) this.faces_imgs[idx].imgDB[hidx] = [];
+        else if (this.faces_imgs[idx].imgDB[hidx] != null && this.faces_imgs[idx].imgDB[hidx][this.faces_imgs[idx].imgDB[hidx].length - 1].equals(cimg)) return;
+        if (hidx < 0) this.faces_imgs[idx].imgID.push(imgh), hidx = this.faces_imgs[idx].imgID.length - 1;
+        this.newFaceImgStack(idx, cimg)
+        this.faces_imgs[idx].imgDB[hidx] = [];
         if (Polymesh.isEmptyImage(cimg)) {
-            this.faces_imgs[idx][imgh].push(image.create(cimg.width, cimg.height));
+            this.faces_imgs[idx].imgDB[hidx].push(image.create(cimg.width, cimg.height));
             return;
         }
         let img = image.create(1, 1), scale = 0.2;
         while (img.width < cimg.width || img.height < cimg.height) {
             Polymesh.resizeImage(cimg.clone(), img, true);
-            this.faces_imgs[idx][imgh].push(img.clone());
+            this.faces_imgs[idx].imgDB[hidx].push(img.clone());
             const scaleD = scale;
             img = image.create(Math.max(1, Math.trunc(scaleD * cimg.width)), Math.max(1, Math.trunc(scaleD * cimg.height)));
-            scale *= square * (scale * 7.95);
-        } this.faces_imgs[idx][imgh].push(cimg.clone());
+            scale += square * (scale * 0.00005);
+        } this.faces_imgs[idx].imgDB[hidx].push(cimg.clone());
     }
 
-    protected faces_imgs: {[imgh: string]: Image[]}[]; protected faces_imgs_cache_stack: Image[][];
+    protected faces_imgs: Polymesh.FaceImg[]; protected faces_imgs_cache_stack: Image[][];
     get vfaces(): Polymesh.FaceLOD[] {
         if (this.isDel()) return null
         return this.faces.map((v, i) => {
-            if (v.img) return new Polymesh.FaceLOD(
+            if (v.img) {
+                const hidx = this.faces_imgs[i].imgID.indexOf(Polymesh.hashImage(v.img))
+                return new Polymesh.FaceLOD(
                     v.indices, v.color,
                     v.offset, v.scale,
-                    v.img, this.faces_imgs[i][Polymesh.hashImage(v.img)] ? this.faces_imgs[i][Polymesh.hashImage(v.img)] : [v.img]
+                    v.img, this.faces_imgs[i].imgDB[hidx] ? this.faces_imgs[i].imgDB[hidx] : [v.img]
                 );
+            }
             return new Polymesh.FaceLOD(
                 v.indices, v.color,
                 v.offset, v.scale
@@ -664,10 +678,11 @@ class polymesh extends polyview {
         this._faces[idx].img = img
         if (imgs) {
             const imgh = Polymesh.hashImage(img);
-            if (this.faces_imgs[idx][imgh]) return;
-            else this.faces_imgs[idx] = {};
-            this.faces_imgs[idx][imgh] = imgs.slice();
-            if (this.faces_imgs[idx][imgh][this.faces_imgs[idx][imgh].length - 1]) this.faces_imgs[idx][imgh][this.faces_imgs[idx][imgh].length - 1] = img.clone();
+            const hidx = this.faces_imgs[idx].imgID.indexOf(imgh);
+            if (hidx < 0) return;
+            else this.faces_imgs[idx].imgDB[hidx] = [];
+            this.faces_imgs[idx].imgDB[hidx] = imgs.slice();
+            if (this.faces_imgs[idx].imgDB[hidx][this.faces_imgs[idx].imgDB[hidx].length - 1]) this.faces_imgs[idx].imgDB[hidx][this.faces_imgs[idx].imgDB[hidx].length - 1] = img.clone();
             this.makeFaceImgStack(idx, img)
         } else this.updFaceImg(idx)
     }
