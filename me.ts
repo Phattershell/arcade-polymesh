@@ -19,25 +19,20 @@ namespace Polymesh {
     constructor(indices: number[], color: number, offset?: number, scale?: number, img?: Image, imgs?: Image[]) {
         this.indices = indices; this.color = color; this.offset = offset; this.scale = scale; this.img = img; this.imgs = imgs;
     } }
-
-    export class Motion3 { public x: number; public y: number; public z: number; public vx: number; public vy: number; public vz: number; public ax: number; public ay: number; public az: number; public fx: number; public fy: number; public fz: number;
-    constructor(x: number, y: number, z: number, vx: number, vy: number, vz: number, ax: number, ay: number, az: number, fx: number, fy: number, fz: number) {
-        this.x = x; this.y = y; this.z = z; this.vx = vx; this.vy = vy; this.vz = vz; this.ax = ax; this.ay = ay; this.az = az; this.fx = fx; this.fy = fy; this.fz = fz;
-    } }
-    export class Vector3 { public x: number; public y: number; public z: number; constructor(x: number, y: number, z: number) { this.x = x; this.y = y; this.z = z; } }
+    
     export interface Vector3_ { x: number, y: number, z: number, x_: number, y_: number, z_: number }
 
-    const __meshes: polymesh[] = [];
+    const __meshes: model[] = [];
     const __meshes_refs: {[id: number]: number[]} = {};
     const __meshes_null_refs: number[] = [];
     const __meshes_null_refh: {[id: number]: boolean} = {};
-    const __meshes_kinds: {[kind: number]: polymesh[]} = {};
+    const __meshes_kinds: {[kind: number]: model[]} = {};
     export const PHI = 1.6180339887, NORMAL_DIST = 1.665, LOD_DIST = 1.2
 
-    export const camview = new polyview(true);
+    export const camview = new view(true);
     export let zoom = 1, sort = 0x0, dist = 150, fardist = 0;
 
-    export function __meshes_upd_kind(msh: polymesh, kind: number) {
+    export function __meshes_upd_kind(msh: model, kind: number) {
         if (msh.kind === (kind | 0)) return;
         __meshes_kinds[msh.kind] = __meshes_refs[msh.kind].map(i => __meshes[i]);
         __meshes_refs[msh.kind] = __meshes_refs[msh.kind].filter(idx => idx !== msh.idx);
@@ -48,7 +43,7 @@ namespace Polymesh {
         __meshes_kinds[msh.kind] = __meshes_refs[msh.kind].map(i => __meshes[i]);
     }
 
-    export function __meshes_del(msh: polymesh) {
+    export function __meshes_del(msh: model) {
         __meshes_kinds[msh.kind] = __meshes_kinds[msh.kind].filter(m => m !== msh);
         __meshes_refs[msh.kind] = __meshes_refs[msh.kind].filter(idx => idx !== msh.idx);
         __meshes[msh.idx] = null;
@@ -80,13 +75,13 @@ namespace Polymesh {
         if (idx < 0) {
             idx = __meshes.length
             __meshes_refs[kind].push(idx)
-            const msh = new polymesh(Math.floor(kind), idx);
+            const msh = new model(Math.floor(kind), idx);
             __meshes.push(msh)
             __meshes_kinds[kind].push(msh)
             return msh
         }
         __meshes_refs[kind].push(idx)
-        const msh = new polymesh(Math.floor(kind), idx);
+        const msh = new model(Math.floor(kind), idx);
         __meshes[idx] = msh
         __meshes_kinds[kind].push(msh)
         return msh

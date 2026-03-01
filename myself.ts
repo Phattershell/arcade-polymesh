@@ -94,11 +94,11 @@ namespace Polymesh {
     //% group="main camera"
     //% weight=5
     export function changeCam(choice: PolyCam, x: number) {
-        switch (choice) {
-            case 0xC: if (zoom    !== zoom    + x) zoom    += x; return
-            case 0xD: if (dist    !== dist    + x) dist    += x; return
-            case 0xE: if (fardist !== fardist + x) fardist += x; return
-        }
+        //switch (choice) {
+        //    case 0xC: if (zoom    !== zoom    + x) zoom    += x; return
+        //    case 0xD: if (dist    !== dist    + x) dist    += x; return
+        //    case 0xE: if (fardist !== fardist + x) fardist += x; return
+        //}
         camview.changePos(choice, x)
     }
     //% blockId=poly_angle_set
@@ -113,11 +113,11 @@ namespace Polymesh {
     //% group="main camera"
     //% weight=10
     export function setCam(choice: PolyCam, x: number) {
-        switch (choice) {
-            case 0xC: if (zoom    !== x) zoom    = x; return
-            case 0xD: if (dist    !== x) dist    = x; return
-            case 0xE: if (fardist !== x) fardist = x; return
-        }
+        //switch (choice) {
+        //    case 0xC: if (zoom    !== x) zoom    = x; return
+        //    case 0xD: if (dist    !== x) dist    = x; return
+        //    case 0xE: if (fardist !== x) fardist = x; return
+        //}
         camview.setPos(choice, x)
     }
 
@@ -134,11 +134,11 @@ namespace Polymesh {
     //% group="main camera"
     //% weight=4
     export function getCam(choice: PolyCam) {
-        switch (choice) {
-            case 0xC: return zoom
-            case 0xD: return dist
-            case 0xE: return fardist
-        }
+        //switch (choice) {
+        //    case 0xC: return zoom
+        //    case 0xD: return dist
+        //    case 0xE: return fardist
+        //}
         return camview.getPos(choice)
     }
 

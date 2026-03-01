@@ -1,7 +1,7 @@
 
 namespace Polymesh {
 
-    function renderMsh(mshs: polymesh[], output: Image, lineren?: boolean) {
+    function renderMsh(mshs: model[], output: Image, lineren?: boolean) {
         const sorted = mshs.map(msh => ({ mesh: msh, depth: msh.zDepth() }))
         if (sorted.length <= 0) return;
         switch (sort) {
@@ -31,10 +31,12 @@ namespace Polymesh {
     //% msh.shadow=variables_get msh.defl=myMesh
     //% group="render"
     //% weight=10
-    export function render(msh: polymesh, output: Image, lineren?: boolean) {
+    export function render(msh: model, output: Image, lineren?: boolean) {
         if (msh.isDel()) return;
         if (!msh || !output || msh.points.length <= 0 || msh.faces.length <= 0) return;
         if (msh.flag.invisible) return;
+
+        const dist = camview.near, fardist = camview.far, zoom = camview.zoom;
 
         const centerX = Math.idiv(output.width, 2), centerY = Math.idiv(output.height, 2);
 

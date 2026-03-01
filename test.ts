@@ -1,5 +1,8 @@
 // tests go here; this will not be compiled when this package is used as an extension.
 
+game.stats = true;
+control.EventContext.onStats("");
+
 controller.B.onEvent(ControllerButtonEvent.Pressed, function () {
     SolidOnly = !SolidOnly
     for (const msh of Polymesh.meshAll(PolyKind.obj)) {
@@ -79,7 +82,7 @@ function setupMesh() {
     }
 }
 let cubeSize = 0
-let myMesh: polymesh = null
+let myMesh: Polymesh.model = null
 let SolidOnly = true
 let maxMesh = 0
 scene.setBackgroundColor(9)

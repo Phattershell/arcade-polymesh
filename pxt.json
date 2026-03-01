@@ -18,13 +18,14 @@
         "kind.ts",
         "class.ts",
         "enum.ts",
-        "shadow.ts"
+        "shadow.ts",
+        "matrix.ts"
     ],
     "testFiles": [
         "test.ts"
     ],
     "targetVersions": {
-        "target": "4.0.7",
+        "target": "4.0.8",
         "targetId": "arcade"
     },
     "supportedTargets": [

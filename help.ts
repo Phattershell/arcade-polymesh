@@ -70,10 +70,10 @@ namespace Polymesh {
     }
 
     const normalLen3 = (n: number) => Math.sqrt((n * n) + (n * n) + (n * n))
-
+/*
     export const rotatePointLen3D = (len: number, pivot: Vector3, angle: Vector3, code: Buffer): Vector3 =>
         rotatePoint3Dxyz({ x: pivot.x + (code[0] ? normalLen3(len) : 0), y: pivot.y + (code[1] ? -normalLen3(len) : 0), z: pivot.z + (code[2] ? normalLen3(len) : 0)}, pivot, angle);
-
+*/
     const computeNormal = (v0: Vector3_, v1: Vector3_, v2: Vector3_): Vector3 => {
         // make vector from triangle
         const u = {
@@ -88,19 +88,14 @@ namespace Polymesh {
         };
 
         // cross product เพื่อหาทิศทางตั้งฉาก
-        const normal = {
-            x: (u.y * v.z) - (u.z * v.y),
-            y: (u.z * v.x) - (u.x * v.z),
-            z: (u.x * v.y) - (u.y * v.x)
-        };
+        const normal = new Vector3(
+            (u.y * v.z) - (u.z * v.y),
+            (u.z * v.x) - (u.x * v.z),
+            (u.x * v.y) - (u.y * v.x)
+        );
 
         // normalize ให้มีความยาว = 1
-        const length = Math.sqrt((normal.x * normal.x) + (normal.y * normal.y) + (normal.z * normal.z));
-        return {
-            x: normal.x / length,
-            y: normal.y / length,
-            z: normal.z / length
-        };
+        return normal.normalize();
     }
 
     const dot3 = (a: Vector3, b: Vector3): number =>
@@ -147,15 +142,27 @@ namespace Polymesh {
 
     const calcMode7 = (a: number, b: number) => a + 0.5 * b
 
-    const mode7img = (from: Image, to: Image, H_scroll: number, V_scroll: number, A: number, B: number, C: number, D: number) => {
+    const mode7img = (from: Image, to: Image, H_scroll: number, V_scroll: number, sxSin: number, sxCos: number, syCos: number, sySin: number) => {
         let Center_x = calcMode7(H_scroll, to.width)
         let Center_y = calcMode7(V_scroll, to.height)
-        let color = 0
-        for (let y = 0; y < to.height; y++) {
-            for (let x = 0; x < to.width; x++) {
-                color = from.getPixel(Math.trunc(Center_x + (0.00390625 * A * (x + (H_scroll - Center_x)) + 0.00390625 * B * (y + (V_scroll - Center_y)))), Math.trunc(Center_y + (0.00390625 * C * (x + (H_scroll - Center_x)) + 0.00390625 * D * (y + (V_scroll - Center_y)))))
-                to.setPixel(x, y, color)
+        const FIXED = 390625e-8;// 0.00390625
+        const toBuf = pins.createBuffer(to.height);
+        for (let x = 0; x < to.width; x++) {
+            to.getRows(x, toBuf);
+            const relX = x + (H_scroll - Center_x);
+            for (let y = 0; y < to.height; y++) {
+                const relY = y + (V_scroll - Center_y);
+
+                const sx = Math.round(Center_x + (FIXED * (sxSin * relX + sxCos * relY)));
+                const sy = Math.round(Center_y + (FIXED * (syCos * relX + sySin * relY)));
+                if (sx < 0 || sx >= from.width || sy < 0 || sy >= from.height) continue;
+                const color = from.getPixel(sx, sy);
+                if (color < 1) continue;
+                toBuf[y] = color;
+                //color = from.getPixel(Math.round(Center_x + (0.00390625 * A * (x + (H_scroll - Center_x)) + 0.00390625 * B * (y + (V_scroll - Center_y)))), Math.round(Center_y + (0.00390625 * C * (x + (H_scroll - Center_x)) + 0.00390625 * D * (y + (V_scroll - Center_y)))))
+                //to.setPixel(x, y, color)
             }
+            to.setRows(x, toBuf);
         }
     }
 
@@ -164,7 +171,7 @@ namespace Polymesh {
 
         // when size is equled use copy
         if (from.width === to.width && from.height === to.height) {
-            to.drawTransparentImage(from.clone(), 0, 0);
+            to.copyFrom(from.clone());
             return;
         }
 
@@ -177,7 +184,7 @@ namespace Polymesh {
             );
             return;
         } */
-        const N2 = Polymesh.PHI + 1;
+        const N2 = 1 / ((Polymesh.PHI + 1) * 0.959);
 
         // calculate size ratio
         const scaleX = from.width  / to.width;
@@ -187,8 +194,8 @@ namespace Polymesh {
         let H_scroll = 0;
         let V_scroll = 0;
         if (center) {
-            H_scroll = ((to.width  - from.width)  * scaleX) / N2;
-            V_scroll = ((to.height - from.height) * scaleY) / N2;
+            H_scroll = ((to.width  - from.width)  * scaleX) * N2;
+            V_scroll = ((to.height - from.height) * scaleY) * N2;
         }
 
         // call mode7img using scale factor
@@ -294,12 +301,12 @@ namespace Polymesh {
         dest.drawTransparentImage(src, x - r, y - r)
     }
 
-    export const meshDepthZ = (msh: polymesh) => {
+    export const meshDepthZ = (msh: model) => {
         if (msh.isDel()) return NaN;
         const pos = camview.pos, rot = camview.rot;
         return rotatePoint3Dyxz(new Vector3(msh.pos.x, msh.pos.y, msh.pos.z), new Vector3(pos.x, pos.y, pos.z), new Vector3(rot.x, rot.y, rot.z)).z;
     }
 
-    export const meshDistZ = (msh: polymesh) => (Math.abs(dist) / (Math.abs(dist) + meshDepthZ(msh)))
+    export const meshDistZ = (msh: model) => (Math.abs(dist) / (Math.abs(dist) + meshDepthZ(msh)))
 
 }
