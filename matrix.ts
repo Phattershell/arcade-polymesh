@@ -14,10 +14,40 @@ namespace Polymesh {
     }
 
     export class Motion3 {
-        public x:  number; public y:  number; public z:  number;
-        public vx: number; public vy: number; public vz: number;
-        public ax: number; public ay: number; public az: number;
-        public fx: number; public fy: number; public fz: number;
+        public _x:  Fx8; public _y:  Fx8; public _z:  Fx8;
+        public _vx: Fx8; public _vy: Fx8; public _vz: Fx8;
+        public _ax: Fx8; public _ay: Fx8; public _az: Fx8;
+        public _fx: Fx8; public _fy: Fx8; public _fz: Fx8;
+
+        set  x(n: number) { this._x  = Fx8(n); }; get  x() { return Fx.toFloat(this._x);  };
+        set  y(n: number) { this._y  = Fx8(n); }; get  y() { return Fx.toFloat(this._y);  };
+        set  z(n: number) { this._z  = Fx8(n); }; get  z() { return Fx.toFloat(this._z);  };
+
+        set vx(n: number) { this._vx = Fx8(n); }; get vx() { return Fx.toFloat(this._vx); };
+        set vy(n: number) { this._vy = Fx8(n); }; get vy() { return Fx.toFloat(this._vy); };
+        set vz(n: number) { this._vz = Fx8(n); }; get vz() { return Fx.toFloat(this._vz); };
+
+        set ax(n: number) { this._ax = Fx8(n); }; get ax() { return Fx.toFloat(this._ax); };
+        set ay(n: number) { this._ay = Fx8(n); }; get ay() { return Fx.toFloat(this._ay); };
+        set az(n: number) { this._az = Fx8(n); }; get az() { return Fx.toFloat(this._az); };
+
+        set fx(n: number) { this._fx = Fx8(n); }; get fx() { return Fx.toFloat(this._fx); };
+        set fy(n: number) { this._fy = Fx8(n); }; get fy() { return Fx.toFloat(this._fy); };
+        set fz(n: number) { this._fz = Fx8(n); }; get fz() { return Fx.toFloat(this._fz); };
+
+        update(delta: Fx8) {
+            if (this._ax !== Fx.zeroFx8) this._vx = Fx.add(this._vx, Fx.mul(this._ax, delta));
+            if (this._ay !== Fx.zeroFx8) this._vy = Fx.add(this._vy, Fx.mul(this._ay, delta));
+            if (this._az !== Fx.zeroFx8) this._vz = Fx.add(this._vz, Fx.mul(this._az, delta));
+
+            if (this._fx !== Fx.zeroFx8) this._vx = Fx.add(this._vx, Fx.mul(Fx.sub(Fx.oneFx8, this._fx), delta));
+            if (this._fy !== Fx.zeroFx8) this._vy = Fx.add(this._vy, Fx.mul(Fx.sub(Fx.oneFx8, this._fx), delta));
+            if (this._fz !== Fx.zeroFx8) this._fz = Fx.add(this._fz, Fx.mul(Fx.sub(Fx.oneFx8, this._fz), delta));
+
+            if (this._vx !== Fx.zeroFx8) this._x  = Fx.add(this._x,  Fx.mul(this._vx, delta));
+            if (this._vy !== Fx.zeroFx8) this._y  = Fx.add(this._y,  Fx.mul(this._vy, delta));
+            if (this._vz !== Fx.zeroFx8) this._z  = Fx.add(this._z,  Fx.mul(this._vz, delta));
+        }
         
         constructor(x: number, y: number, z: number, vx: number, vy: number, vz: number, ax: number, ay: number, az: number, fx: number, fy: number, fz: number) {
             this.x  = x;  this.y  = y;  this.z  = z;
@@ -34,6 +64,7 @@ namespace Polymesh {
     
     export class Vector3 {
         public x: number; public y: number; public z: number;
+
         constructor(x: number, y: number, z: number) {
             this.x = x; this.y = y; this.z = z;
         };

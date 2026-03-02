@@ -2,6 +2,7 @@ namespace Polymesh {
 
     export class base {
         protected __prop_upd: control.FrameCallback; __del: boolean; protected __unDel: boolean; protected __updateLoop: boolean;
+        public pos: Motion3; public rot: Motion3;
     
         public init() { }
     
@@ -10,7 +11,7 @@ namespace Polymesh {
         loop() {
             this.__prop_upd = control.eventContext().registerFrameHandler(scene.PRE_RENDER_UPDATE_PRIORITY, () => {
                 const delta = Fx8(control.eventContext().deltaTime)
-                this.motionUpdateRot(delta), this.motionUpdatePos(delta);
+                this.rot.update(delta), this.pos.update(delta);
                 this.__onLoop();
             });
         }
@@ -44,7 +45,7 @@ namespace Polymesh {
             this.rot = null, this.pos = null;
             this.__onDel();
         }
-    
+    /*
         protected rot_x:  Fx8; protected rot_y:  Fx8; protected rot_z:  Fx8;
         protected rot_vx: Fx8; protected rot_vy: Fx8; protected rot_vz: Fx8;
         protected rot_ax: Fx8; protected rot_ay: Fx8; protected rot_az: Fx8;
@@ -96,7 +97,7 @@ namespace Polymesh {
                 Fx.toFloat(this.pos_fx), Fx.toFloat(this.pos_fy), Fx.toFloat(this.pos_fz),
             )
         }
-    
+    *//*
         protected motionUpdatePos(delta: Fx8) {
             const zeroF = Fx8(0), oneF = Fx8(1)
             // Acceleration of position
@@ -131,23 +132,22 @@ namespace Polymesh {
             if (this.rot_vy !== zeroF) this.rot_y = Fx.add(this.rot_y, Fx.mul(this.rot_vy, delta))
             if (this.rot_vz !== zeroF) this.rot_z = Fx.add(this.rot_z, Fx.mul(this.rot_vz, delta))
         }
-    
+    */
         setAngle(choice: number, x: number) {
             if (this.isDel()) return
-            const xF = Fx8(x)
             switch (choice) {
-                case 0x0: if (this.rot_x  !== xF) this.rot_x  = xF; break
-                case 0x1: if (this.rot_y  !== xF) this.rot_y  = xF; break
-                case 0x2: if (this.rot_z  !== xF) this.rot_z  = xF; break
-                case 0x3: if (this.rot_vx !== xF) this.rot_vx = xF; break
-                case 0x4: if (this.rot_vy !== xF) this.rot_vy = xF; break
-                case 0x5: if (this.rot_vz !== xF) this.rot_vz = xF; break
-                case 0x6: if (this.rot_ax !== xF) this.rot_ax = xF; break
-                case 0x7: if (this.rot_ay !== xF) this.rot_ay = xF; break
-                case 0x8: if (this.rot_az !== xF) this.rot_az = xF; break
-                case 0x9: if (this.rot_fx !== xF) this.rot_fx = xF; break
-                case 0xA: if (this.rot_fy !== xF) this.rot_fy = xF; break
-                case 0xB: if (this.rot_fz !== xF) this.rot_fz = xF; break
+                case 0x0: if (this.rot.x  !== x) this.rot.x  = x; break
+                case 0x1: if (this.rot.y  !== x) this.rot.y  = x; break
+                case 0x2: if (this.rot.z  !== x) this.rot.z  = x; break
+                case 0x3: if (this.rot.vx !== x) this.rot.vx = x; break
+                case 0x4: if (this.rot.vy !== x) this.rot.vy = x; break
+                case 0x5: if (this.rot.vz !== x) this.rot.vz = x; break
+                case 0x6: if (this.rot.ax !== x) this.rot.ax = x; break
+                case 0x7: if (this.rot.ay !== x) this.rot.ay = x; break
+                case 0x8: if (this.rot.az !== x) this.rot.az = x; break
+                case 0x9: if (this.rot.fx !== x) this.rot.fx = x; break
+                case 0xA: if (this.rot.fy !== x) this.rot.fy = x; break
+                case 0xB: if (this.rot.fz !== x) this.rot.fz = x; break
             }
         }
         changeAngle(choice: number, x: number) {
