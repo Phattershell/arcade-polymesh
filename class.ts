@@ -152,91 +152,88 @@ namespace Polymesh {
         }
         changeAngle(choice: number, x: number) {
             if (this.isDel()) return
-            const xF = Fx8(x)
             switch (choice) {
-                case 0x0: if (this.rot_x  !== Fx.add(this.rot_x,  xF)) this.rot_x  = Fx.add(this.rot_x,  xF); break
-                case 0x1: if (this.rot_y  !== Fx.add(this.rot_y,  xF)) this.rot_y  = Fx.add(this.rot_y,  xF); break
-                case 0x2: if (this.rot_z  !== Fx.add(this.rot_z,  xF)) this.rot_z  = Fx.add(this.rot_z,  xF); break
-                case 0x3: if (this.rot_vx !== Fx.add(this.rot_vx, xF)) this.rot_vx = Fx.add(this.rot_vx, xF); break
-                case 0x4: if (this.rot_vy !== Fx.add(this.rot_vy, xF)) this.rot_vy = Fx.add(this.rot_vy, xF); break
-                case 0x5: if (this.rot_vz !== Fx.add(this.rot_vz, xF)) this.rot_vz = Fx.add(this.rot_vz, xF); break
-                case 0x6: if (this.rot_ax !== Fx.add(this.rot_ax, xF)) this.rot_ax = Fx.add(this.rot_ax, xF); break
-                case 0x7: if (this.rot_ay !== Fx.add(this.rot_ay, xF)) this.rot_ay = Fx.add(this.rot_ay, xF); break
-                case 0x8: if (this.rot_az !== Fx.add(this.rot_az, xF)) this.rot_az = Fx.add(this.rot_az, xF); break
-                case 0x9: if (this.rot_fx !== Fx.add(this.rot_fx, xF)) this.rot_fx = Fx.add(this.rot_fx, xF); break
-                case 0xA: if (this.rot_fy !== Fx.add(this.rot_fy, xF)) this.rot_fy = Fx.add(this.rot_fy, xF); break
-                case 0xB: if (this.rot_fz !== Fx.add(this.rot_fz, xF)) this.rot_fz = Fx.add(this.rot_fz, xF); break
+                case 0x0: if (0 !== x) this.rot.x  += x; break
+                case 0x1: if (0 !== x) this.rot.y  += x; break
+                case 0x2: if (0 !== x) this.rot.z  += x; break
+                case 0x3: if (0 !== x) this.rot.vx += x; break
+                case 0x4: if (0 !== x) this.rot.vy += x; break
+                case 0x5: if (0 !== x) this.rot.vz += x; break
+                case 0x6: if (0 !== x) this.rot.ax += x; break
+                case 0x7: if (0 !== x) this.rot.ay += x; break
+                case 0x8: if (0 !== x) this.rot.az += x; break
+                case 0x9: if (0 !== x) this.rot.fx += x; break
+                case 0xA: if (0 !== x) this.rot.fy += x; break
+                case 0xB: if (0 !== x) this.rot.fz += x; break
             }
         }
         getAngle(choice: number) {
             if (this.isDel()) return NaN
             switch (choice) {
-                case 0x0: return Fx.toFloat(this.rot_x);
-                case 0x1: return Fx.toFloat(this.rot_y);
-                case 0x2: return Fx.toFloat(this.rot_z);
-                case 0x3: return Fx.toFloat(this.rot_vx);
-                case 0x4: return Fx.toFloat(this.rot_vy);
-                case 0x5: return Fx.toFloat(this.rot_vz);
-                case 0x6: return Fx.toFloat(this.rot_ax);
-                case 0x7: return Fx.toFloat(this.rot_ay);
-                case 0x8: return Fx.toFloat(this.rot_az);
-                case 0x9: return Fx.toFloat(this.rot_fx);
-                case 0xA: return Fx.toFloat(this.rot_fy);
-                case 0xB: return Fx.toFloat(this.rot_fz);
+                case 0x0: return this.rot.x;
+                case 0x1: return this.rot.y;
+                case 0x2: return this.rot.z;
+                case 0x3: return this.rot.vx;
+                case 0x4: return this.rot.vy;
+                case 0x5: return this.rot.vz;
+                case 0x6: return this.rot.ax;
+                case 0x7: return this.rot.ay;
+                case 0x8: return this.rot.az;
+                case 0x9: return this.rot.fx;
+                case 0xA: return this.rot.fy;
+                case 0xB: return this.rot.fz;
             } return NaN
         }
     
         setPos(choice: number, x: number) {
             if (this.isDel()) return
-            const xF = Fx8(x)
             switch (choice) {
-                case 0x0: if (this.pos_x  !== xF) this.pos_x  = xF; break
-                case 0x1: if (this.pos_y  !== xF) this.pos_y  = xF; break
-                case 0x2: if (this.pos_z  !== xF) this.pos_z  = xF; break
-                case 0x3: if (this.pos_vx !== xF) this.pos_vx = xF; break
-                case 0x4: if (this.pos_vy !== xF) this.pos_vy = xF; break
-                case 0x5: if (this.pos_vz !== xF) this.pos_vz = xF; break
-                case 0x6: if (this.pos_ax !== xF) this.pos_ax = xF; break
-                case 0x7: if (this.pos_ay !== xF) this.pos_ay = xF; break
-                case 0x8: if (this.pos_az !== xF) this.pos_az = xF; break
-                case 0x9: if (this.pos_fx !== xF) this.pos_fx = xF; break
-                case 0xA: if (this.pos_fy !== xF) this.pos_fy = xF; break
-                case 0xB: if (this.pos_fz !== xF) this.pos_fz = xF; break
+                case 0x0: if (this.pos.x  !== x) this.pos.x  = x; break
+                case 0x1: if (this.pos.y  !== x) this.pos.y  = x; break
+                case 0x2: if (this.pos.z  !== x) this.pos.z  = x; break
+                case 0x3: if (this.pos.vx !== x) this.pos.vx = x; break
+                case 0x4: if (this.pos.vy !== x) this.pos.vy = x; break
+                case 0x5: if (this.pos.vz !== x) this.pos.vz = x; break
+                case 0x6: if (this.pos.ax !== x) this.pos.ax = x; break
+                case 0x7: if (this.pos.ay !== x) this.pos.ay = x; break
+                case 0x8: if (this.pos.az !== x) this.pos.az = x; break
+                case 0x9: if (this.pos.fx !== x) this.pos.fx = x; break
+                case 0xA: if (this.pos.fy !== x) this.pos.fy = x; break
+                case 0xB: if (this.pos.fz !== x) this.pos.fz = x; break
             }
         }
         changePos(choice: number, x: number) {
             if (this.isDel()) return
-            const xF = Fx8(x)
             switch (choice) {
-                case 0x0: if (this.pos_x  !== Fx.add(this.pos_x,  xF)) this.pos_x  = Fx.add(this.pos_x,  xF); break
-                case 0x1: if (this.pos_y  !== Fx.add(this.pos_y,  xF)) this.pos_y  = Fx.add(this.pos_y,  xF); break
-                case 0x2: if (this.pos_z  !== Fx.add(this.pos_z,  xF)) this.pos_z  = Fx.add(this.pos_z,  xF); break
-                case 0x3: if (this.pos_vx !== Fx.add(this.pos_vx, xF)) this.pos_vx = Fx.add(this.pos_vx, xF); break
-                case 0x4: if (this.pos_vy !== Fx.add(this.pos_vy, xF)) this.pos_vy = Fx.add(this.pos_vy, xF); break
-                case 0x5: if (this.pos_vz !== Fx.add(this.pos_vz, xF)) this.pos_vz = Fx.add(this.pos_vz, xF); break
-                case 0x6: if (this.pos_ax !== Fx.add(this.pos_ax, xF)) this.pos_ax = Fx.add(this.pos_ax, xF); break
-                case 0x7: if (this.pos_ay !== Fx.add(this.pos_ay, xF)) this.pos_ay = Fx.add(this.pos_ay, xF); break
-                case 0x8: if (this.pos_az !== Fx.add(this.pos_az, xF)) this.pos_az = Fx.add(this.pos_az, xF); break
-                case 0x9: if (this.pos_fx !== Fx.add(this.pos_fx, xF)) this.pos_fx = Fx.add(this.pos_fx, xF); break
-                case 0xA: if (this.pos_fy !== Fx.add(this.pos_fy, xF)) this.pos_fy = Fx.add(this.pos_fy, xF); break
-                case 0xB: if (this.pos_fz !== Fx.add(this.pos_fz, xF)) this.pos_fz = Fx.add(this.pos_fz, xF); break
+                case 0x0: if (0 !== x) this.pos.x  += x; break
+                case 0x1: if (0 !== x) this.pos.y  += x; break
+                case 0x2: if (0 !== x) this.pos.z  += x; break
+                case 0x3: if (0 !== x) this.pos.vx += x; break
+                case 0x4: if (0 !== x) this.pos.vy += x; break
+                case 0x5: if (0 !== x) this.pos.vz += x; break
+                case 0x6: if (0 !== x) this.pos.ax += x; break
+                case 0x7: if (0 !== x) this.pos.ay += x; break
+                case 0x8: if (0 !== x) this.pos.az += x; break
+                case 0x9: if (0 !== x) this.pos.fx += x; break
+                case 0xA: if (0 !== x) this.pos.fy += x; break
+                case 0xB: if (0 !== x) this.pos.fz += x; break
             }
         }
         getPos(choice: number) {
             if (this.isDel()) return NaN
             switch (choice) {
-                case 0x0: return Fx.toFloat(this.pos_x);
-                case 0x1: return Fx.toFloat(this.pos_y);
-                case 0x2: return Fx.toFloat(this.pos_z);
-                case 0x3: return Fx.toFloat(this.pos_vx);
-                case 0x4: return Fx.toFloat(this.pos_vy);
-                case 0x5: return Fx.toFloat(this.pos_vz);
-                case 0x6: return Fx.toFloat(this.pos_ax);
-                case 0x7: return Fx.toFloat(this.pos_ay);
-                case 0x8: return Fx.toFloat(this.pos_az);
-                case 0x9: return Fx.toFloat(this.pos_fx);
-                case 0xA: return Fx.toFloat(this.pos_fy);
-                case 0xB: return Fx.toFloat(this.pos_fz);
+                case 0x0: return this.pos.x;
+                case 0x1: return this.pos.y;
+                case 0x2: return this.pos.z;
+                case 0x3: return this.pos.vx;
+                case 0x4: return this.pos.vy;
+                case 0x5: return this.pos.vz;
+                case 0x6: return this.pos.ax;
+                case 0x7: return this.pos.ay;
+                case 0x8: return this.pos.az;
+                case 0x9: return this.pos.fx;
+                case 0xA: return this.pos.fy;
+                case 0xB: return this.pos.fz;
             } return NaN
         }
     
