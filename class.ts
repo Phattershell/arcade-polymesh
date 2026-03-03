@@ -254,7 +254,7 @@ namespace Polymesh {
         }
 
         pointUpdate() {
-            for (let i = 0; i < this.points.length; i++) this.tpoints[i] = rotatePoint3Dxyz(this.points[i], this.pos, this.rot);
+            for (let i = 0; i < this.points.length; i++) this.tpoints[i] = rotatePoint3Dxyz(this.points[i], this.pos.toVector(), this.rot.toVector());
         }
 
         __onLoop() {

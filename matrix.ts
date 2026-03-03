@@ -1,6 +1,16 @@
 
 namespace Polymesh {
 
+    export function iFx8(v: number) {
+        switch (v) {
+            case 2.0: return Fx.twoFx8;
+            case 1.5: return Fx.oneHalfFx8;
+            case 1.0: return Fx.oneFx8;
+            case 0.0: return Fx.zeroFx8;
+            default:  return Fx8(v);
+        }
+    }
+
     //Describes a point in 2d space with an attached intensity h
     export class Point2 {
         x: number;
@@ -14,10 +24,10 @@ namespace Polymesh {
     }
 
     export class Motion3 {
-        public _x:  Fx8; public _y:  Fx8; public _z:  Fx8;
-        public _vx: Fx8; public _vy: Fx8; public _vz: Fx8;
-        public _ax: Fx8; public _ay: Fx8; public _az: Fx8;
-        public _fx: Fx8; public _fy: Fx8; public _fz: Fx8;
+        _x:  Fx8 = Fx.zeroFx8; _y:  Fx8 = Fx.zeroFx8; _z:  Fx8 = Fx.zeroFx8;
+        _vx: Fx8 = Fx.zeroFx8; _vy: Fx8 = Fx.zeroFx8; _vz: Fx8 = Fx.zeroFx8;
+        _ax: Fx8 = Fx.zeroFx8; _ay: Fx8 = Fx.zeroFx8; _az: Fx8 = Fx.zeroFx8;
+        _fx: Fx8 = Fx.zeroFx8; _fy: Fx8 = Fx.zeroFx8; _fz: Fx8 = Fx.zeroFx8;
 
         set  x(n: number) { this._x  = Fx8(n); }; get  x() { return Fx.toFloat(this._x);  };
         set  y(n: number) { this._y  = Fx8(n); }; get  y() { return Fx.toFloat(this._y);  };
@@ -40,9 +50,9 @@ namespace Polymesh {
             if (this._ay !== Fx.zeroFx8) this._vy = Fx.add(this._vy, Fx.mul(this._ay, delta));
             if (this._az !== Fx.zeroFx8) this._vz = Fx.add(this._vz, Fx.mul(this._az, delta));
 
-            if (this._fx !== Fx.zeroFx8) this._vx = Fx.add(this._vx, Fx.mul(Fx.sub(Fx.oneFx8, this._fx), delta));
-            if (this._fy !== Fx.zeroFx8) this._vy = Fx.add(this._vy, Fx.mul(Fx.sub(Fx.oneFx8, this._fx), delta));
-            if (this._fz !== Fx.zeroFx8) this._fz = Fx.add(this._fz, Fx.mul(Fx.sub(Fx.oneFx8, this._fz), delta));
+            if (this._fx !== Fx.zeroFx8) this._vx = Fx.mul(this._vx, Fx.mul(this._fx, delta));
+            if (this._fy !== Fx.zeroFx8) this._vy = Fx.mul(this._vy, Fx.mul(this._fx, delta));
+            if (this._fz !== Fx.zeroFx8) this._vz = Fx.mul(this._fz, Fx.mul(this._fz, delta));
 
             if (this._vx !== Fx.zeroFx8) this._x  = Fx.add(this._x,  Fx.mul(this._vx, delta));
             if (this._vy !== Fx.zeroFx8) this._y  = Fx.add(this._y,  Fx.mul(this._vy, delta));
@@ -55,22 +65,30 @@ namespace Polymesh {
             this.ax = ax; this.ay = ay; this.az = az;
             this.fx = fx; this.fy = fy; this.fz = fz;
         };
+
+        public toVector() {
+            return new Vector3(this.x, this.y, this.z);
+        }
         
         public normalize() {
-            const magnitude = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-            return new Vector3(this.x / magnitude, this.y / magnitude, this.z / magnitude);
+            const magnitude = 1 / Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+            return new Vector3(this.x * magnitude, this.y * magnitude, this.z * magnitude);
         };
     }
     
     export class Vector3 {
-        public x: number; public y: number; public z: number;
+        private _x: Fx8 = Fx.zeroFx8; private _y: Fx8 = Fx.zeroFx8; private _z: Fx8 = Fx.zeroFx8;
+
+        set x(n: number) { this._x = Fx8(n); }; get x() { return Fx.toFloat(this._x); };
+        set y(n: number) { this._y = Fx8(n); }; get y() { return Fx.toFloat(this._y); };
+        set z(n: number) { this._z = Fx8(n); }; get z() { return Fx.toFloat(this._z); };
 
         constructor(x: number, y: number, z: number) {
             this.x = x; this.y = y; this.z = z;
         };
         public normalize() {
-            const magnitude = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-            return new Vector3(this.x / magnitude, this.y / magnitude, this.z / magnitude);
+            const magnitude = 1 / Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+            return new Vector3(this.x * magnitude, this.y * magnitude, this.z * magnitude);
         };
     }
 /*
