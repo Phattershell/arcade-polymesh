@@ -23,6 +23,22 @@ namespace Polymesh {
         }
     }
 
+    export class Vector3 {
+        protected _x: Fx8 = Fx.zeroFx8; protected _y: Fx8 = Fx.zeroFx8; protected _z: Fx8 = Fx.zeroFx8;
+
+        set x(n: number) { this._x = Fx8(n); }; get x() { return Fx.toFloat(this._x); };
+        set y(n: number) { this._y = Fx8(n); }; get y() { return Fx.toFloat(this._y); };
+        set z(n: number) { this._z = Fx8(n); }; get z() { return Fx.toFloat(this._z); };
+
+        constructor(x: number, y: number, z: number) {
+            this.x = x; this.y = y; this.z = z;
+        };
+        public normalize() {
+            const magnitude = 1 / Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+            return new Vector3(this.x * magnitude, this.y * magnitude, this.z * magnitude);
+        };
+    }
+
     export class Motion3 extends Vector3 {
         // protected _x:  Fx8 = Fx.zeroFx8; protected _y:  Fx8 = Fx.zeroFx8; protected _z:  Fx8 = Fx.zeroFx8;
         protected _vx: Fx8 = Fx.zeroFx8; protected _vy: Fx8 = Fx.zeroFx8; protected _vz: Fx8 = Fx.zeroFx8;
@@ -77,21 +93,6 @@ namespace Polymesh {
         };
     }
     
-    export class Vector3 {
-        protected _x: Fx8 = Fx.zeroFx8; protected _y: Fx8 = Fx.zeroFx8; protected _z: Fx8 = Fx.zeroFx8;
-
-        set x(n: number) { this._x = Fx8(n); }; get x() { return Fx.toFloat(this._x); };
-        set y(n: number) { this._y = Fx8(n); }; get y() { return Fx.toFloat(this._y); };
-        set z(n: number) { this._z = Fx8(n); }; get z() { return Fx.toFloat(this._z); };
-
-        constructor(x: number, y: number, z: number) {
-            this.x = x; this.y = y; this.z = z;
-        };
-        public normalize() {
-            const magnitude = 1 / Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-            return new Vector3(this.x * magnitude, this.y * magnitude, this.z * magnitude);
-        };
-    }
 /*
     //Describes a point in 3D space
     class Vector3 {
