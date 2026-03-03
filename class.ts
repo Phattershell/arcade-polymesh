@@ -299,7 +299,7 @@ namespace Polymesh {
     
         _faces: Polymesh.Face[]; _points: Polymesh.Vector3[]; pivot: Polymesh.Vector3;
         flag: Polymesh.FlagMesh;
-        data: {[id: string]: any}; kind: number; idx: number;
+        data: {[id: string]: any}; kind: number; idx: number; scale: number;
 
         isOutOfArea(camera: view) {
             
@@ -454,10 +454,15 @@ namespace Polymesh {
                 )
             })
         }
+
+        makeScale(v: Vector3) {
+            return new Vector3(v.x * this.scale, v.y * this.scale, v.z * this.scale);
+        }
     
         pointCam<T>(f: (v: Polymesh.Vector3) => T|Polymesh.Vector3) {
-            return this.points.map(v => {
-                const vpoint = new Polymesh.Vector3(this.pos.x + v.x, this.pos.y + v.y, this.pos.z + v.z );
+            return this._points.map(v => {
+                const vscale = this.makeScale(v);
+                const vpoint = new Polymesh.Vector3(this.pos.x + vscale.x, this.pos.y + vscale.y, this.pos.z + vscale.z );
                 const vpivot = new Polymesh.Vector3(this.pos.x + this.pivot.x, this.pos.y + this.pivot.y, this.pos.z + this.pivot.z );
                 return f(Polymesh.rotatePoint3Dxyz(vpoint, vpivot, new Polymesh.Vector3(this.rot.x, this.rot.y, this.rot.z)));
             })
@@ -479,8 +484,9 @@ namespace Polymesh {
     
         constructor(kind: number, idx: number) {
             super();
-            this.kind = (kind | 0);
-            this.idx = (idx | 0);
+            this.scale = 1;
+            this.kind = kind || 0;
+            this.idx = idx || 0;
         }
     
         __onDel() {

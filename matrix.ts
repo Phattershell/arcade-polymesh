@@ -88,8 +88,7 @@ namespace Polymesh {
         }
         
         public normalize() {
-            const magnitude = 1 / Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
-            return new Vector3(this.x * magnitude, this.y * magnitude, this.z * magnitude);
+            return super.normalize();
         };
     }
     
@@ -155,7 +154,7 @@ namespace Polymesh {
     ]);
 
     //Used for rotations about the y axis
-    function makeOYRotationMatrix(degrees: number) {
+    export function makeOYRotationMatrix(degrees: number) {
         let cos = Math.cos(degrees * Math.PI / 180.0);
         let sin = Math.sin(degrees * Math.PI / 180.0);
         return new Mat4x4([
@@ -165,7 +164,7 @@ namespace Polymesh {
             [0, 0, 0, 1]
         ]);
     }
-    function makeOXRotationMatrix(degrees: number) {
+    export function makeOXRotationMatrix(degrees: number) {
         let cos = Math.cos(degrees * Math.PI / 180.0);
         let sin = Math.sin(degrees * Math.PI / 180.0);
         return new Mat4x4([
@@ -175,7 +174,7 @@ namespace Polymesh {
             [0, 0, 0, 1]
         ]);
     }
-    function makeOZRotationMatrix(degrees: number) {
+    export function makeOZRotationMatrix(degrees: number) {
         let cos = Math.cos(degrees * Math.PI / 180.0);
         let sin = Math.sin(degrees * Math.PI / 180.0);
         return new Mat4x4([
@@ -186,11 +185,11 @@ namespace Polymesh {
         ]);
     }
 
-    function makeGeneralRotationMatrix(eulerAngles: Vector3) {
+    export function makeGeneralRotationMatrix(eulerAngles: Vector3) {
         return multiplyM44M44(makeOZRotationMatrix(eulerAngles.z), multiplyM44M44(makeOYRotationMatrix(eulerAngles.y), makeOXRotationMatrix(eulerAngles.x)));
     }
 
-    function makeTranslationMatrix(t: Vector3) {
+    export function makeTranslationMatrix(t: Vector3) {
         return new Mat4x4([
             [1, 0, 0, t.x],
             [0, 1, 0, t.y],
@@ -199,7 +198,7 @@ namespace Polymesh {
         ]);
     }
 
-    function makeScalingMatrix(scale: number) {
+    export function makeScalingMatrix(scale: number) {
         return new Mat4x4([
             [scale, 0, 0, 0],
             [0, scale, 0, 0],
@@ -209,7 +208,7 @@ namespace Polymesh {
     }
 
     //Multiply a 4x4 Matrix by a vector4
-    function multiplyM44V4(mat4x4: Mat4x4, vec4: Vector4) {
+    export function multiplyM44V4(mat4x4: Mat4x4, vec4: Vector4) {
         let result = [0, 0, 0, 0];
         let vec = [vec4.x, vec4.y, vec4.z, vec4.w];
 
@@ -224,7 +223,7 @@ namespace Polymesh {
 
 
     // Multiplies two 4x4 matrices.
-    function multiplyM44M44(matA: Mat4x4, matB: Mat4x4) {
+    export function multiplyM44M44(matA: Mat4x4, matB: Mat4x4) {
         let result = new Mat4x4([
             [0, 0, 0, 0],
             [0, 0, 0, 0],
@@ -245,7 +244,7 @@ namespace Polymesh {
 
 
     // Transposes a 4x4 matrix.
-    function transposed(mat: Mat4x4) {
+    export function transposed(mat: Mat4x4) {
         let result = new Mat4x4([
             [0, 0, 0, 0],
             [0, 0, 0, 0],
