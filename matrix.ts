@@ -23,15 +23,15 @@ namespace Polymesh {
         }
     }
 
-    export class Motion3 {
-        _x:  Fx8 = Fx.zeroFx8; _y:  Fx8 = Fx.zeroFx8; _z:  Fx8 = Fx.zeroFx8;
-        _vx: Fx8 = Fx.zeroFx8; _vy: Fx8 = Fx.zeroFx8; _vz: Fx8 = Fx.zeroFx8;
-        _ax: Fx8 = Fx.zeroFx8; _ay: Fx8 = Fx.zeroFx8; _az: Fx8 = Fx.zeroFx8;
-        _fx: Fx8 = Fx.zeroFx8; _fy: Fx8 = Fx.zeroFx8; _fz: Fx8 = Fx.zeroFx8;
+    export class Motion3 extends Vector3 {
+        // protected _x:  Fx8 = Fx.zeroFx8; protected _y:  Fx8 = Fx.zeroFx8; protected _z:  Fx8 = Fx.zeroFx8;
+        protected _vx: Fx8 = Fx.zeroFx8; protected _vy: Fx8 = Fx.zeroFx8; protected _vz: Fx8 = Fx.zeroFx8;
+        protected _ax: Fx8 = Fx.zeroFx8; protected _ay: Fx8 = Fx.zeroFx8; protected _az: Fx8 = Fx.zeroFx8;
+        protected _fx: Fx8 = Fx.zeroFx8; protected _fy: Fx8 = Fx.zeroFx8; protected _fz: Fx8 = Fx.zeroFx8;
 
-        set  x(n: number) { this._x  = Fx8(n); }; get  x() { return Fx.toFloat(this._x);  };
-        set  y(n: number) { this._y  = Fx8(n); }; get  y() { return Fx.toFloat(this._y);  };
-        set  z(n: number) { this._z  = Fx8(n); }; get  z() { return Fx.toFloat(this._z);  };
+        //set  x(n: number) { this._x  = Fx8(n); }; get  x() { return Fx.toFloat(this._x);  };
+        //set  y(n: number) { this._y  = Fx8(n); }; get  y() { return Fx.toFloat(this._y);  };
+        //set  z(n: number) { this._z  = Fx8(n); }; get  z() { return Fx.toFloat(this._z);  };
 
         set vx(n: number) { this._vx = Fx8(n); }; get vx() { return Fx.toFloat(this._vx); };
         set vy(n: number) { this._vy = Fx8(n); }; get vy() { return Fx.toFloat(this._vy); };
@@ -60,7 +60,8 @@ namespace Polymesh {
         }
         
         constructor(x: number, y: number, z: number, vx: number, vy: number, vz: number, ax: number, ay: number, az: number, fx: number, fy: number, fz: number) {
-            this.x  = x;  this.y  = y;  this.z  = z;
+            super(x, y, z);
+            //this.x  = x;  this.y  = y;  this.z  = z;
             this.vx = vx; this.vy = vy; this.vz = vz;
             this.ax = ax; this.ay = ay; this.az = az;
             this.fx = fx; this.fy = fy; this.fz = fz;
@@ -77,7 +78,7 @@ namespace Polymesh {
     }
     
     export class Vector3 {
-        private _x: Fx8 = Fx.zeroFx8; private _y: Fx8 = Fx.zeroFx8; private _z: Fx8 = Fx.zeroFx8;
+        protected _x: Fx8 = Fx.zeroFx8; protected _y: Fx8 = Fx.zeroFx8; protected _z: Fx8 = Fx.zeroFx8;
 
         set x(n: number) { this._x = Fx8(n); }; get x() { return Fx.toFloat(this._x); };
         set y(n: number) { this._y = Fx8(n); }; get y() { return Fx.toFloat(this._y); };

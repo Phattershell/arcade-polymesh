@@ -11,6 +11,7 @@
         "README.md",
         "assets.json",
         "help.ts",
+        "matrix.ts",
         "sorting.ts",
         "me.ts",
         "myself.ts",
@@ -18,8 +19,7 @@
         "kind.ts",
         "class.ts",
         "enum.ts",
-        "shadow.ts",
-        "matrix.ts"
+        "shadow.ts"
     ],
     "testFiles": [
         "test.ts"
