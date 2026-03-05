@@ -166,6 +166,8 @@ namespace Polymesh {
         }
     }
 
+    const div2r = (n: number) => ((n >> 1) + (n & 1));
+
     export function resizeImage(from: Image, to: Image, center?: boolean) {
         if (isEmptyImage(from)) return;
         //if (from.equals(to)) return;
@@ -175,7 +177,44 @@ namespace Polymesh {
             to.copyFrom(from.clone());
             return;
         }
-        to.blit(0, 0, to.width, to.height, from, 0, 0, from.width, from.height, false, false);
+        if (!center) {
+            to.blit(0, 0, to.width, to.height, from, 0, 0, from.width, from.height, false, false);
+            return;
+        }
+        const fromW_2 = div2r(from.width), fromH_2 = div2r(from.height);
+        const toW_2 = div2r(to.width), toH_2 = div2r(to.height);
+        if (to.height <= 1) {
+            const stamp = () => to.blit(0, 0, toW_2, to.height, from, 0, 0, fromW_2, from.height, false, false);
+            from.flipX();
+            stamp();
+            to.flipX();
+            from.flipX();
+            stamp();
+            return;
+        }
+        if (to.width <= 1) {
+            const stamp = () => to.blit(0, 0, to.width, toH_2, from, 0, 0, from.height, fromH_2, false, false);
+            from.flipY();
+            stamp();
+            to.flipY();
+            from.flipY();
+            stamp();
+            return;
+        }
+        const stamp = () => to.blit(0, 0, toW_2, toH_2, from, 0, 0, fromW_2, fromH_2, false, false);
+        from.flipX();
+        stamp();
+        to.flipY();
+        from.flipY();
+        stamp();
+        to.flipX();
+        from.flipX();
+        stamp();
+        to.flipY();
+        from.flipY();
+        stamp();
+        to.flipX();
+        //to.blit(0, 0, to.width, to.height, from, 0, 0, from.width, from.height, false, false);
 
         /* if (1) {
             distortImage(from, to,
@@ -279,10 +318,10 @@ namespace Polymesh {
 
         let H = computeHomography(srcW, srcH, x0, y0, x1, y1, x2, y2, x3, y3);
         let Hinv = H.inverse();
-        let toBuf = pins.createBuffer(to.height);
+        let toRow = image.create(1, to.height);
 
         for (let px = minX; px <= maxX; px++) {
-            to.getRows(px, toBuf);
+            toRow.blitRow(0, 0, to, px, to.height);
             for (let py = minY; py <= maxY; py++) {
                 let [sx, sy] = Hinv.multiplyVector(px, py);
 
@@ -293,9 +332,9 @@ namespace Polymesh {
 
                 let col = from.getPixel(ix, iy);
                 if (col < 1) continue;
-                toBuf[py] = col;
+                toRow.setPixel(0, py, col);
             }
-            to.setRows(px, toBuf);
+            to.blitRow(px, 0, toRow, 0, toRow.height);
         }
     }
 
@@ -339,8 +378,8 @@ namespace Polymesh {
     export function distortImage(from: Image, to: Image,
         x0: number, y0: number, x1: number, y1: number, x2: number, y2: number, x3?: number, y3?: number,
         center?: boolean) {
-        distortImagePerspective(from, to, x0, y0, x1, y1, x2, y2, x3, y3)
-        //distortImageUtil(from, to, new Pt(x0, y0), new Pt(x1, y1), new Pt(x2, y2),(isNaN(x3) || isNaN(y3)) ? null : new Pt(x3, y3), center)
+        //distortImagePerspective(from, to, x0, y0, x1, y1, x2, y2, x3, y3)
+        distortImageUtil(from, to, new Pt(x0, y0), new Pt(x1, y1), new Pt(x2, y2),(isNaN(x3) || isNaN(y3)) ? null : new Pt(x3, y3), center)
     }
 
     export function fillCircleImage(dest: Image, x: number, y: number, r: number, c: number) {

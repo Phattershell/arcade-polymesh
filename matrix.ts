@@ -374,7 +374,7 @@ namespace Polymesh {
             for (let j = 0; j < 8; j++) {
                 row.push(A[i][j]);
             }
-            B.push(row);
+            B.push(row.slice());
             b.push(-A[i][8]);
         }
 
