@@ -168,12 +168,14 @@ namespace Polymesh {
 
     export function resizeImage(from: Image, to: Image, center?: boolean) {
         if (isEmptyImage(from)) return;
+        //if (from.equals(to)) return;
 
         // when size is equled use copy
         if (from.width === to.width && from.height === to.height) {
             to.copyFrom(from.clone());
             return;
         }
+        to.blit(0, 0, to.width, to.height, from, 0, 0, from.width, from.height, false, false);
 
         /* if (1) {
             distortImage(from, to,
@@ -184,6 +186,7 @@ namespace Polymesh {
             );
             return;
         } */
+        /*
         const N2 = 1 / ((Polymesh.PHI + 1) * 0.959);
 
         // calculate size ratio
@@ -201,6 +204,7 @@ namespace Polymesh {
         // call mode7img using scale factor
         // A = scaleX * 256, D = scaleY * 256 (in mode7img have divisor as 1/256)
         mode7img(from, to, -(H_scroll), -(V_scroll), scaleX * 256, 0, 0, scaleY * 256);
+        */
     }
 
 
