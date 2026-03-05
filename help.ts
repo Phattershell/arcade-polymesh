@@ -251,6 +251,54 @@ namespace Polymesh {
         if (n % 2 > 0) return l + (n2 + half);
         return l + (size - n2 - half);
     }
+
+    // ฟังก์ชันหลัก distortImagePerspective (เหมือนเดิม แต่ใช้ srcW srcH ใน computeHomography)
+    function distortImagePerspective(
+        from: Image,
+        to: Image,
+        x0: number, y0: number,
+        x1: number, y1: number,
+        x2: number, y2: number,
+        x3?: number, y3?: number
+    ) {
+        x3 = x3 || (x2 + (x1 - x0));
+        y3 = y3 || (y2 + (y1 - y0));
+        
+        let srcW = from.width;
+        let srcH = from.height;
+
+        let minX = Math.min(Math.min(x0, x1), Math.min(x2, x3)) | 0;
+        let maxX = Math.max(Math.max(x0, x1), Math.max(x2, x3)) | 0;
+        let minY = Math.min(Math.min(y0, y1), Math.min(y2, y3)) | 0;
+        let maxY = Math.max(Math.max(y0, y1), Math.max(y2, y3)) | 0;
+
+        minX = Math.max(0, minX);
+        maxX = Math.min(to.width - 1, maxX);
+        minY = Math.max(0, minY);
+        maxY = Math.min(to.height - 1, maxY);
+
+        let H = computeHomography(srcW, srcH, x0, y0, x1, y1, x2, y2, x3, y3);
+        let Hinv = H.inverse();
+        let toBuf = pins.createBuffer(to.height);
+
+        for (let px = minX; px <= maxX; px++) {
+            to.getRows(px, toBuf);
+            for (let py = minY; py <= maxY; py++) {
+                let [sx, sy] = Hinv.multiplyVector(px, py);
+
+                if (sx < 0 || sx >= srcW || sy < 0 || sy >= srcH) continue;
+
+                let ix = sx | 0;
+                let iy = sy | 0;
+
+                let col = from.getPixel(ix, iy);
+                if (col < 1) continue;
+                toBuf[py] = col;
+            }
+            to.setRows(px, toBuf);
+        }
+    }
+
     // main distortImage function
     export function distortImageUtil(
         from: Image, to: Image,
@@ -291,7 +339,8 @@ namespace Polymesh {
     export function distortImage(from: Image, to: Image,
         x0: number, y0: number, x1: number, y1: number, x2: number, y2: number, x3?: number, y3?: number,
         center?: boolean) {
-        distortImageUtil(from, to, new Pt(x0, y0), new Pt(x1, y1), new Pt(x2, y2),(isNaN(x3) || isNaN(y3)) ? null : new Pt(x3, y3), center)
+        distortImagePerspective(from, to, x0, y0, x1, y1, x2, y2, x3, y3)
+        //distortImageUtil(from, to, new Pt(x0, y0), new Pt(x1, y1), new Pt(x2, y2),(isNaN(x3) || isNaN(y3)) ? null : new Pt(x3, y3), center)
     }
 
     export function fillCircleImage(dest: Image, x: number, y: number, r: number, c: number) {
