@@ -166,7 +166,7 @@ namespace Polymesh {
         }
     }
 
-    const div2r = (n: number) => ((n >> 1) + (n & 1));
+    const div2r = (n: number) => ((n + (n & 1)) >> 1);
 
     export function resizeImage(from: Image, to: Image, center?: boolean) {
         if (isEmptyImage(from)) return;
