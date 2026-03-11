@@ -546,7 +546,7 @@ namespace Polymesh {
             if (this.isDel()) return NaN
             const distPos = new Polymesh.Vector3( Polymesh.camview.pos.x - this.pos.x, Polymesh.camview.pos.y - this.pos.y, Polymesh.camview.pos.z - this.pos.z );
             const distSum = (distPos.x * distPos.x) + (distPos.y * distPos.y) + (distPos.z * distPos.z)
-            return Math.sqrt(distSum)
+            return psqrt(distSum)
         }
     
         //% blockId=poly_dist_othermesh
@@ -561,7 +561,7 @@ namespace Polymesh {
             if (this.isDel()) return NaN
             const distPos = new Polymesh.Vector3( otherMesh.pos.x - this.pos.x, otherMesh.pos.y - this.pos.y, otherMesh.pos.z - this.pos.z )
             const distSum = (distPos.x * distPos.x) + (distPos.y * distPos.y) + (distPos.z * distPos.z)
-            return Math.sqrt(distSum)
+            return psqrt(distSum)
         }
     
         //% blockId=poly_normal_speed
@@ -574,7 +574,7 @@ namespace Polymesh {
             if (this.isDel()) return NaN
             const distPosV = new Polymesh.Vector3(this.pos.vx, this.pos.vy, this.pos.vz)
             const distSum = (distPosV.x * distPosV.x) + (distPosV.y * distPosV.y) + (distPosV.z * distPosV.z)
-            return Math.sqrt(distSum)
+            return psqrt(distSum)
         }
     
         //% blockId=poly_flag_set

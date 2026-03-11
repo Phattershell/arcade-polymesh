@@ -32,6 +32,42 @@ namespace Polymesh {
         return fsin(x + 1.57079632679); // x + PI/2
     }
 
+    export function psqrt(x: number): number {
+        if (x <= 0) return 0;
+        if (x === Infinity) return Infinity;
+
+        // 1. Range Scaling (แทนการหารด้วยการคูณ)
+        // เพื่อให้พหุนามแม่นยำที่สุด เราจะสเกล x ให้อยู่ในช่วง [0.5, 2.0]
+        let scale = 1;
+
+        // ใช้ Loop ปรับค่า scale (ใช้การคูณ/บรรทัดคำนวณสั้นๆ แทนการหาร)
+        // การคูณด้วย 0.25 หรือ 4 เร็วมากในระดับ CPU
+        while (x < 0.5) { x *= 4; scale *= 0.5; }
+        while (x > 2.0) { x *= 0.25; scale *= 2; }
+
+        /**
+         * 2. High-Degree Polynomial Approximation
+         * สูตรพหุนามกำลัง 4 ที่ปรับจูนมาเพื่อช่วง [0.5, 2.0]
+         * f(x) = a + bx + cx^2 + dx^3 + ex^4
+         */
+        const a = 0.16541;
+        const b = 1.34135;
+        const c = -0.73949;
+        const d = 0.29323;
+        const e = -0.05282;
+
+        // ใช้ Horner's Method เพื่อประหยัดการคูณ (เหลือการคูณแค่ 4 ครั้ง)
+        // res = (((e*x + d)*x + c)*x + b)*x + a
+        let res = e;
+        res = res * x + d;
+        res = res * x + c;
+        res = res * x + b;
+        res = res * x + a;
+
+        // 3. Scale กลับไปยังค่าเดิม
+        return res * scale;
+    }
+    
 
     export const gcd = (a: number, b: number): number => {
         if ((!a || !b) || ((a && b) && (a < 0 || b < 0))) return NaN
@@ -101,7 +137,7 @@ namespace Polymesh {
         );
     }
 
-    const normalLen3 = (n: number) => Math.sqrt((n * n) + (n * n) + (n * n))
+    const normalLen3 = (n: number) => psqrt((n * n) + (n * n) + (n * n))
 /*
     export const rotatePointLen3D = (len: number, pivot: Vector3, angle: Vector3, code: Buffer): Vector3 =>
         rotatePoint3Dxyz({ x: pivot.x + (code[0] ? normalLen3(len) : 0), y: pivot.y + (code[1] ? -normalLen3(len) : 0), z: pivot.z + (code[2] ? normalLen3(len) : 0)}, pivot, angle);

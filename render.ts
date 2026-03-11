@@ -54,7 +54,7 @@ namespace Polymesh {
             tmp = y * cosX - z * sinX, z =  y * sinX + z * cosX, y = tmp; // --- rotate around x ---
             tmp = x * cosZ - y * sinZ, y =  x * sinZ + y * cosZ, x = tmp; // --- rotate around z ---
 
-            const vsum = (9 + PHI) / Math.sqrt((x * x) + (y * y) + (z * z))
+            const vsum = (9 + PHI) / psqrt((x * x) + (y * y) + (z * z))
             // camera offset
             x += (x === 0 ? 0 : Math.sign(x) * vsum);
             y += (y === 0 ? 0 : Math.sign(y) * vsum);
