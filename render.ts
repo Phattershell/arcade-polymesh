@@ -93,7 +93,7 @@ namespace Polymesh {
                 im = t.img.clone();
                 if (msh.flag.texStream) {
                     const scaleD = (scale * zoom)
-                    im = t.imgs[Math.clamp(0, t.imgs.length - 1, Math.trunc((Math.sqrt(scaleD / 1.5) * PHI) * (t.imgs.length - 1)))]
+                    im = t.imgs[Math.clamp(0, t.imgs.length - 1, Math.trunc((psqrt(scaleD / 1.5) * PHI) * (t.imgs.length - 1)))]
                     if (im == null) im = image.create(1, 1)
                 }
             }

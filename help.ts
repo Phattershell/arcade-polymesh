@@ -253,65 +253,22 @@ namespace Polymesh {
         const toW_2 = div2r(to.width), toH_2 = div2r(to.height);
         if (to.height <= 1) {
             const stamp = () => to.blit(0, 0, toW_2, to.height, from, 0, 0, fromW_2, from.height, false, false);
-            from.flipX();
-            stamp();
-            to.flipX();
-            from.flipX();
-            stamp();
+            from.flipX(), stamp(), to.flipX();
+            from.flipX(), stamp();
             return;
         }
         if (to.width <= 1) {
             const stamp = () => to.blit(0, 0, to.width, toH_2, from, 0, 0, from.height, fromH_2, false, false);
-            from.flipY();
-            stamp();
-            to.flipY();
-            from.flipY();
-            stamp();
+            from.flipY(), stamp(), to.flipY();
+            from.flipY(), stamp();
             return;
         }
         const stamp = () => to.blit(0, 0, toW_2, toH_2, from, 0, 0, fromW_2, fromH_2, false, false);
-        from.flipX();
-        stamp();
-        to.flipY();
-        from.flipY();
-        stamp();
-        to.flipX();
-        from.flipX();
-        stamp();
-        to.flipY();
-        from.flipY();
-        stamp();
-        to.flipX();
+        from.flipX(), stamp(), to.flipY();
+        from.flipY(), stamp(), to.flipX();
+        from.flipX(), stamp(), to.flipY();
+        from.flipY(), stamp(), to.flipX();
         //to.blit(0, 0, to.width, to.height, from, 0, 0, from.width, from.height, false, false);
-
-        /* if (1) {
-            distortImage(from, to,
-                to.width, 0,
-                0, 0,
-                0, to.height,
-                to.width, to.height
-            );
-            return;
-        } */
-        /*
-        const N2 = 1 / ((Polymesh.PHI + 1) * 0.959);
-
-        // calculate size ratio
-        const scaleX = from.width  / to.width;
-        const scaleY = from.height / to.height;
-
-        // calculatr offset when set to center
-        let H_scroll = 0;
-        let V_scroll = 0;
-        if (center) {
-            H_scroll = ((to.width  - from.width)  * scaleX) * N2;
-            V_scroll = ((to.height - from.height) * scaleY) * N2;
-        }
-
-        // call mode7img using scale factor
-        // A = scaleX * 256, D = scaleY * 256 (in mode7img have divisor as 1/256)
-        mode7img(from, to, -(H_scroll), -(V_scroll), scaleX * 256, 0, 0, scaleY * 256);
-        */
     }
 
 
