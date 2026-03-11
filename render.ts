@@ -41,9 +41,9 @@ namespace Polymesh {
         const centerX = Math.idiv(output.width, 2), centerY = Math.idiv(output.height, 2);
 
         let tmp = 0
-        const cosX = Math.cos(camview.rot.x), sinX = Math.sin(camview.rot.x);
-        const cosY = Math.cos(camview.rot.y), sinY = Math.sin(camview.rot.y);
-        const cosZ = Math.cos(camview.rot.z), sinZ = Math.sin(camview.rot.z);
+        const cosX = fcos(camview.rot.x), sinX = fsin(camview.rot.x);
+        const cosY = fcos(camview.rot.y), sinY = fsin(camview.rot.y);
+        const cosZ = fcos(camview.rot.z), sinZ = fsin(camview.rot.z);
 
         // Transform vertices
         const rotated = msh.pointCam((v) => {
