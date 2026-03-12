@@ -1,6 +1,33 @@
 
 namespace Polymesh {
 
+    export function finv(x: number): number {
+        if (x === 0) return Infinity;
+        if (x < 0) return -finv(-x);
+
+        // 1. Range Scaling
+        // ปรับ x ให้อยู่ในช่วง [0.5, 1.0] เพื่อความแม่นยำของพหุนาม
+        // โดยการคูณด้วย 0.5 หรือ 2 (เทียบเท่าการเลื่อน Bit)
+        let scale = 1;
+        while (x < 0.5) x *= 2,   scale *= 2;
+        while (x > 1.0) x *= 0.5, scale *= 0.5;
+
+        /**
+         * 2. Polynomial Approximation (Degree 2)
+         * สูตร: f(x) ≈ a*x^2 + b*x + c
+         * สำหรับช่วง [0.5, 1.0] สัมประสิทธิ์ที่เหมาะสมคือ:
+         */
+        const a = 1.4545;
+        const b = -4.3636;
+        const c = 3.9091;
+
+        // คำนวณด้วย Horner's Method: (a*x + b)*x + c
+        let y = (a * x + b) * x + c;
+
+        // 3. Scaling กลับ
+        return y * scale;
+    }
+
     const PI = Math.PI;
     const TWO_PI = PI * 2;
 
@@ -42,8 +69,8 @@ namespace Polymesh {
 
         // ใช้ Loop ปรับค่า scale (ใช้การคูณ/บรรทัดคำนวณสั้นๆ แทนการหาร)
         // การคูณด้วย 0.25 หรือ 4 เร็วมากในระดับ CPU
-        while (x < 0.5) { x *= 4; scale *= 0.5; }
-        while (x > 2.0) { x *= 0.25; scale *= 2; }
+        while (x < 0.5) x *= 4,    scale *= 0.5;
+        while (x > 2.0) x *= 0.25, scale *= 2;
 
         /**
          * 2. High-Degree Polynomial Approximation
@@ -278,28 +305,31 @@ namespace Polymesh {
 
     export function isOutOfArea(x: number, y: number, width: number, height: number, scale?: number) { return (isOutOfRange(x, width, scale) || isOutOfRange(y, height, scale)); }
 
-    export function avgZ(rot: Vector3[], inds: number[]) { return (inds.reduce((s, i) => s + rot[i].z, 0) / inds.length); }
+    export function avgZ(rot: Vector3[], inds: number[]) { const invIndsLen = finv(inds.length); return (inds.reduce((s, i) => s + rot[i].z, 0) * invIndsLen); }
 
-    export function avgXYZ(rot: Vector3[], inds: number[]) { return new Vector3(
-        (inds.reduce((s, i) => s + rot[i].x, 0) / inds.length),
-        (inds.reduce((s, i) => s + rot[i].y, 0) / inds.length),
-        (inds.reduce((s, i) => s + rot[i].z, 0) / inds.length),
+    export function avgXYZ(rot: Vector3[], inds: number[]) { const invIndsLen = finv(inds.length);
+        return new Vector3(
+        (inds.reduce((s, i) => s + rot[i].x, 0) * invIndsLen),
+        (inds.reduce((s, i) => s + rot[i].y, 0) * invIndsLen),
+        (inds.reduce((s, i) => s + rot[i].z, 0) * invIndsLen),
         ); 
     }
 
     export function farZ(rot: Vector3[], inds: number[]) { return (inds.reduce((s, i) => Math.max(s, rot[i].z), rot[0].z)) * inds.length; }
 
-    export function avgZs(rot: Vector3[][], n: number, inds: number[]) { return (inds.reduce((s, i) => s + rot[i][n].z, 0) / inds.length); }
+    export function avgZs(rot: Vector3[][], n: number, inds: number[]) { const invIndsLen = finv(inds.length); return (inds.reduce((s, i) => s + rot[i][n].z, 0) * invIndsLen); }
 
     export function isEmptyImage(img: Image) { return img.equals(image.create(img.width, img.height)); }
 
     export function isOutOfAreaOnFace(rotated: { x: number, y: number }[], ind: number[], width: number, height: number) {
-        const avgXYs = new Pt( ind.reduce((cur, i) => cur + rotated[i].x, 0) / ind.length, ind.reduce((cur, i) => cur + rotated[i].y, 0) / ind.length );
+        const invIndsLen = finv(ind.length)
+        const avgXYs = new Pt( ind.reduce((cur, i) => cur + rotated[i].x, 0) * invIndsLen, ind.reduce((cur, i) => cur + rotated[i].y, 0) * invIndsLen );
         return isOutOfArea(avgXYs.x, avgXYs.y, width, height, 5)
     }
 
     export function isOutOfAreaOnAvg (point2s: { x: number, y: number }[], width: number, height: number) {
-        const avgXYs = new Pt( point2s.reduce((cur, val) => cur + val.x, 0) / point2s.length, point2s.reduce((cur, val) => cur + val.y, 0) / point2s.length );
+        const invPt2sLen = finv(point2s.length);
+        const avgXYs = new Pt( point2s.reduce((cur, val) => cur + val.x, 0) * invPt2sLen, point2s.reduce((cur, val) => cur + val.y, 0) * invPt2sLen );
         return isOutOfArea(avgXYs.x, avgXYs.y, width, height, 5)
     }
 
@@ -371,14 +401,14 @@ namespace Polymesh {
         if (Polymesh.isEmptyImage(from)) return;
         if (!p3) p3 = new Pt(p2.x + (p1.x - p0.x), p2.y + (p1.y - p0.y));
         const w = from.width, h = from.height;
-        const w_ = (1 / w), h_ = (1 / h);
+        const wInv = finv(w*1.082), hInv = finv(h);
         const fromRowBuf = pins.createBuffer(h);
         const emptyHash = fromRowBuf.hash(0xffff)
         for (let sx = 0; sx < w; sx++) {
             const ix = zigzet(0, w-1, sx, center)
             from.getRows(w - ix - 1, fromRowBuf)
             if (fromRowBuf.hash(0xffff) === emptyHash) continue;
-            const u0 = (ix * w_), u1 = ((ix + 1) * w_);
+            const u0 = (ix * wInv), u1 = ((ix + 1) * wInv);
             const qu = [u0, u1].map(u => (new Ptl(
                 p0.x + (p1.x - p0.x) * u,
                 p0.y + (p1.y - p0.y) * u,
@@ -390,7 +420,7 @@ namespace Polymesh {
                 if (fromRowBuf.hash(0xffff) === emptyHash) continue;
                 const color = fromRowBuf[0]
                 if (color < 1) continue;// transparent
-                const v0 = (iy * h_), v1 = ((iy + 1) * h_);
+                const v0 = (iy * hInv), v1 = ((iy + 1) * hInv);
                 // Map quad on 1 pixel
                 const qv = [v0, v0, v1, v1].map((v, i) => { const i_2 = i & 1;
                     return new Pt(

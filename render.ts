@@ -60,7 +60,7 @@ namespace Polymesh {
             y += (y === 0 ? 0 : Math.sign(y) * vsum);
             z += (z === 0 ? 0 : Math.sign(z) * vsum);
             // Perspective
-            const scale = Math.abs(dist) / (Math.abs(dist) + z);
+            const scale = Math.abs(dist) * finv(Math.abs(dist) + z);
             return new Vector3(
                 centerX + x * scale * zoom,
                 centerY + y * scale * zoom,
@@ -87,13 +87,13 @@ namespace Polymesh {
             const inds_ = [];
             if (inds.length > 2) inds_[0] = [t.indices[0], t.indices[1], t.indices[2]];
             if (inds.length > 3) inds_[1] = [t.indices[3], t.indices[1], t.indices[2]];
-            const scale = (Math.abs(dist) / (Math.abs(dist) + avgZ(rotated, t.indices)));
+            const scale = (Math.abs(dist) * finv(Math.abs(dist) + avgZ(rotated, t.indices)));
             // LOD calculating?
             if (t.img) {
                 im = t.img.clone();
                 if (msh.flag.texStream) {
                     const scaleD = (scale * zoom)
-                    im = t.imgs[Math.clamp(0, t.imgs.length - 1, Math.trunc((psqrt(scaleD / 1.5) * PHI) * (t.imgs.length - 1)))]
+                    im = t.imgs[Math.clamp(0, t.imgs.length - 1, Math.trunc((psqrt(scaleD * 0.75) * PHI) * (t.imgs.length - 1)))]
                     if (im == null) im = image.create(1, 1)
                 }
             }
@@ -117,8 +117,8 @@ namespace Polymesh {
                     // set scale image from camera distance
                     const baseW = im.width;
                     const baseH = im.height;
-                    const halfW = (baseW / 3) * scale * t.scale * zoom;
-                    const halfH = (baseH / 3) * scale * t.scale * zoom;
+                    const halfW = (baseW * 0.33333333) * scale * t.scale * zoom;
+                    const halfH = (baseH * 0.33333333) * scale * t.scale * zoom;
 
                     bq[0].x += halfW, bq[0].y += halfH
                     bq[1].x -= halfW, bq[1].y += halfH
@@ -159,8 +159,8 @@ namespace Polymesh {
                 const baseW = im.width;
                 const baseH = im.height;
 
-                halfW = (baseW / 3) * scale * t.scale * zoom;
-                halfH = (baseH / 3) * scale * t.scale * zoom;
+                halfW = (baseW * 0.33333333) * scale * t.scale * zoom;
+                halfH = (baseH * 0.33333333) * scale * t.scale * zoom;
 
                 square = Polymesh.gcd(halfW, halfH)
             };
@@ -174,8 +174,8 @@ namespace Polymesh {
                 // fill circle if image is empty
                 if (isEmptyImage(t.img)) { fillCircleImage(output, cx, cy, square, t.color); continue; }
 
-                halfW /= 1.5;
-                halfH /= 1.5;
+                halfW *= 0.75;
+                halfH *= 0.75;
 
                 // Draw Simple 2D image (billboard) as quad pixel on image
                 // use distortImage or drawing without perspective distortion
