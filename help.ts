@@ -39,9 +39,9 @@ namespace Polymesh {
     export function fsin(x: number): number {
         // 1. Range Reduction & Folding
         // ปรับ x ให้อยู่ในช่วง [-PI, PI]
-        x = x % TWO_PI;
-        if      (x >  PI) x -= TWO_PI;
-        else if (x < -PI) x += TWO_PI;
+        //x = x % TWO_PI;
+        while (x >  PI) x -= TWO_PI;
+        while (x < -PI) x += TWO_PI;
 
         // 2. Optimized Polynomial
         // สูตร: y = 1.2732 * x - 0.4053 * x * |x|
