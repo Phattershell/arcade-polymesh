@@ -28,36 +28,37 @@ namespace Polymesh {
         return y * scale;
     }
 
-    const PI = Math.PI;
-    const TWO_PI = PI * 2;
+    const PI = 3.14159265;
+    const TWO_PI = 6.28318531;
 
     /**
-     * Folded Polynomial Sine (High Precision & Clamped)
-     * Max Error: ~0.0001 (แม่นยำกว่าแบบเดิม 10 เท่า)
+     * Folded Polynomial Sine
+     * - ความแม่นยำ: ปานกลาง (Error ~0.001)
+     * - ช่วงผลลัพธ์: [-1.0, 1.0] แน่นอน
      */
     export function fsin(x: number): number {
-        // 1. Range Reduction (Normalize x to [-PI, PI])
-        x = (x % TWO_PI);
-        x = (x + TWO_PI) % TWO_PI;
-        if (x > PI) x -= TWO_PI;
+        // 1. Range Reduction & Folding
+        // ปรับ x ให้อยู่ในช่วง [-PI, PI]
+        x = x % TWO_PI;
+        if      (x >  PI) x -= TWO_PI;
         else if (x < -PI) x += TWO_PI;
 
-        // 2. Core Approximation (B = 4/PI, C = -4/PI^2)
-        // ใช้สูตรพหุนามกำลัง 2 เป็นฐาน
-        let y = 1.27323954 * x - 0.405284735 * x * Math.abs(x);
+        // 2. Optimized Polynomial
+        // สูตร: y = 1.2732 * x - 0.4053 * x * |x|
+        // ค่า 1.2732 คือ 4/PI และ 0.4053 คือ 4/PI^2
+        let y = 1.27323954 * x - 0.40528473 * x * (x < 0 ? -x : x);
 
-        // 3. Precision Enhancement + Range Locking
-        // การคูณด้วย 0.225 และการจัดรูปแบบนี้จะช่วยให้ค่า y 
-        // ไม่หลุดออกนอกช่วง [-1, 1] แม้ x จะเข้าใกล้จุดสูงสุดก็ตาม
-        const Q = 0.225;
-        y = Q * (y * Math.abs(y) - y) + y;
-
-        return y;
+        // 3. ปรับสมดุล (Smoothing) เล็กน้อยเพื่อให้ผลลัพธ์ไม่เกิน 1
+        // ใช้การดัดโค้งด้วยพหุนามกำลัง 2 อีกชั้นแบบเบาๆ
+        // ค่า 0.225 เป็นค่าคงที่มาตรฐานที่ทำให้ error ต่ำที่สุด
+        return 0.225 * (y * (y < 0 ? -y : y) - y) + y;
     }
 
+    /**
+     * Cosine โดยการเลื่อนเฟส
+     */
     export function fcos(x: number): number {
-        // ใช้คุณสมบัติการเลื่อนเฟส
-        return fsin(x + 1.57079632679); // x + PI/2
+        return fsin(x + 1.57079633); // x + PI/2
     }
 
     export function psqrt(x: number): number {
