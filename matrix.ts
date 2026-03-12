@@ -34,7 +34,7 @@ namespace Polymesh {
             this.x = x; this.y = y; this.z = z;
         };
         public normalize() {
-            const magnitude = 1 / Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+            const magnitude = finv(psqrt((this.x * this.x) + (this.y * this.y) + (this.z * this.z)));
             return new Vector3(this.x * magnitude, this.y * magnitude, this.z * magnitude);
         };
     }
@@ -153,10 +153,12 @@ namespace Polymesh {
         [0, 0, 0, 1]
     ]);
 
+    const DEG_TO_RAD = Math.PI / 180.0
+
     //Used for rotations about the y axis
     export function makeOYRotationMatrix(degrees: number) {
-        let cos = Math.cos(degrees * Math.PI / 180.0);
-        let sin = Math.sin(degrees * Math.PI / 180.0);
+        let cos = fcos(degrees * DEG_TO_RAD);
+        let sin = fsin(degrees * DEG_TO_RAD);
         return new Mat4x4([
             [cos, 0, -sin, 0],
             [0, 1, 0, 0],
@@ -165,8 +167,8 @@ namespace Polymesh {
         ]);
     }
     export function makeOXRotationMatrix(degrees: number) {
-        let cos = Math.cos(degrees * Math.PI / 180.0);
-        let sin = Math.sin(degrees * Math.PI / 180.0);
+        let cos = fcos(degrees * DEG_TO_RAD);
+        let sin = fsin(degrees * DEG_TO_RAD);
         return new Mat4x4([
             [1, 0, 0, 0],
             [0, cos, -sin, 0],
@@ -175,8 +177,8 @@ namespace Polymesh {
         ]);
     }
     export function makeOZRotationMatrix(degrees: number) {
-        let cos = Math.cos(degrees * Math.PI / 180.0);
-        let sin = Math.sin(degrees * Math.PI / 180.0);
+        let cos = fcos(degrees * DEG_TO_RAD);
+        let sin = fsin(degrees * DEG_TO_RAD);
         return new Mat4x4([
             [cos, -sin, 0, 0],
             [sin, cos, 0, 0],
@@ -402,17 +404,19 @@ namespace Polymesh {
         // สำหรับตอนนี้ ใช้สูตร approximate ที่ดี (perspective approx)
         let Happrox = new Matrix3x3();
 
+        const invSrcW = finv(srcW), invSrcH = finv(srcH);
+
         // ตัวอย่างสูตรจาก community (ปรับจาก bilinear + shear)
-        let aa = (dx[1] - dx[0]) / srcW;
-        let bb = (dy[1] - dy[0]) / srcW;
-        let c = (dx[3] - dx[0]) / srcH;
-        let d = (dy[3] - dy[0]) / srcH;
+        let aa = (dx[1] - dx[0]) / invSrcW;
+        let bb = (dy[1] - dy[0]) / invSrcW;
+        let c  = (dx[3] - dx[0]) / invSrcH;
+        let d  = (dy[3] - dy[0]) / invSrcH;
 
         Happrox.m[0][0] = aa;
-        Happrox.m[0][1] = (dx[2] - dx[1] - c * srcW) / srcH;
+        Happrox.m[0][1] = (dx[2] - dx[1] - c * srcW) * invSrcH;
         Happrox.m[0][2] = dx[0];
         Happrox.m[1][0] = bb;
-        Happrox.m[1][1] = (dy[2] - dy[1] - d * srcW) / srcH;
+        Happrox.m[1][1] = (dy[2] - dy[1] - d * srcW) * invSrcH;
         Happrox.m[1][2] = dy[0];
         Happrox.m[2][0] = 0;
         Happrox.m[2][1] = 0;

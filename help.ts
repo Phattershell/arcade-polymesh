@@ -37,7 +37,8 @@ namespace Polymesh {
      */
     export function fsin(x: number): number {
         // 1. Range Reduction (Normalize x to [-PI, PI])
-        x = x % TWO_PI;
+        x = (x % TWO_PI);
+        x = (x + TWO_PI) % TWO_PI;
         if (x > PI) x -= TWO_PI;
         else if (x < -PI) x += TWO_PI;
 
@@ -401,7 +402,7 @@ namespace Polymesh {
         if (Polymesh.isEmptyImage(from)) return;
         if (!p3) p3 = new Pt(p2.x + (p1.x - p0.x), p2.y + (p1.y - p0.y));
         const w = from.width, h = from.height;
-        const wInv = finv(w*1.082), hInv = finv(h);
+        const wInv = 1/w, hInv = 1/h;
         const fromRowBuf = pins.createBuffer(h);
         const emptyHash = fromRowBuf.hash(0xffff)
         for (let sx = 0; sx < w; sx++) {

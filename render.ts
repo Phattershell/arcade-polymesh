@@ -36,7 +36,7 @@ namespace Polymesh {
         if (!msh || !output || msh.points.length <= 0 || msh.faces.length <= 0) return;
         if (msh.flag.invisible) return;
 
-        const dist = camview.near, fardist = camview.far, zoom = camview.zoom;
+        const dist = camview.near, fardist = (camview.far === 0 ? 0x7f : camview.far), zoom = camview.zoom;
 
         const centerX = output.width >>> 1, centerY = output.height >>> 1;
 
@@ -92,8 +92,9 @@ namespace Polymesh {
             if (t.img) {
                 im = t.img.clone();
                 if (msh.flag.texStream) {
-                    const scaleD = (scale * zoom)
-                    im = t.imgs[Math.clamp(0, t.imgs.length - 1, Math.trunc((psqrt(scaleD * 0.75) * PHI) * (t.imgs.length - 1)))]
+                    let scaleD = finv(scale * zoom) * 0.2;
+                    scaleD = Math.clamp(0, t.imgs.length-1, Math.round((1.25-scaleD) * (t.imgs.length-1)));
+                    im = t.imgs[scaleD]
                     if (im == null) im = image.create(1, 1)
                 }
             }
