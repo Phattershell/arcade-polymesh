@@ -105,6 +105,7 @@ namespace Polymesh {
     
     export function picDrawLine(pic: Image, x0: number, y0: number, x1: number, y1: number, color: number) {
         color &= 0xF;
+        x0 |= 0, x1 |= 0, y0 |= 0, y1 |= 0;
         if (x0 === x1 && y0 === y1) { pic.setPixel(x0, y0, color); return; }
         const w = pic.width;
         const h = pic.height;
