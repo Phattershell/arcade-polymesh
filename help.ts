@@ -103,6 +103,50 @@ namespace Polymesh {
         return res * scale;
     }
     
+    export function picDrawLine(pic: Image, x0: number, y0: number, x1: number, y1: number, color: number) {
+        color &= 0xF;
+        if (x0 === x1 && y0 === y1) { pic.setPixel(x0, y0, color); return; }
+        const w = pic.width;
+        const h = pic.height;
+        if ((x0 < 0 && x1 < 0) || (x0 >= w && x1 >= w) ||
+            (y0 < 0 && y1 < 0) || (y0 >= h && y1 >= h)) return;
+
+        let steep = Math.abs(y1 - y0) > Math.abs(x1 - x0), tmp = 0;
+
+        if (steep) //[x0, y0, x1, y1] = [y0, x0, y1, x1];
+            tmp = x0, x0 = y0, y0 = tmp,
+            tmp = x1, x1 = y1, y1 = tmp;
+
+        if (x0 > x1) //[x0, x1, y0, y1] = [x1, x0, y1, y0];
+            tmp = x0, x0 = x1, x1 = tmp,
+            tmp = y0, y0 = y1, y1 = tmp;
+
+        const dx = Math.abs(x1 - x0);
+        const dy = Math.abs(y1 - y0);
+        let err = dx >> 1;   // หรือใช้ bit shift >>1 ถ้าต้องการ integer แท้ ๆ
+
+        const ystep = y0 < y1 ? 1 : -1;
+        let y = y0;
+
+        const nextErr = () => {
+            err -= dy;
+            if (err < 0)
+                y += ystep,
+                err += dx;
+        }
+
+        for (let x = x0; x <= x1; x++, nextErr()) {
+            if (steep) {
+                if (y < 0 || x < 0) continue;
+                if (y >= w || x >= h) break;
+                pic.setPixel(y, x, color);
+            } else {
+                if (x < 0 || y < 0) continue;
+                if (x >= w || y >= h) break;
+                pic.setPixel(x, y, color);
+            }
+        }
+    }
 
     export const gcd = (a: number, b: number): number => {
         if ((!a || !b) || ((a && b) && (a < 0 || b < 0))) return NaN
