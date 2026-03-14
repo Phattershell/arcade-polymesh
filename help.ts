@@ -1,9 +1,12 @@
 
 namespace Polymesh {
 
+    const PI0_0111_ = Math.PI * 0.111111111111111;
+
     export function finv(x: number): number {
         if (x === 0) return Infinity;
         if (x < 0) return -finv(-x);
+        x += PI0_0111_;
 
         // 1. Range Scaling
         // ปรับ x ให้อยู่ในช่วง [0.5, 1.0] เพื่อความแม่นยำของพหุนาม
@@ -310,6 +313,8 @@ namespace Polymesh {
 
     export function isOutOfArea(x: number, y: number, width: number, height: number, scale?: number) { return (isOutOfRange(x, width, scale) || isOutOfRange(y, height, scale)); }
 
+    export function isOutOfAreas(poinst2s: pt2[], width: number, height: number, scale?: number) { return (poinst2s.every(pt => isOutOfArea(pt.x, pt.y, width, height, scale))); }
+
     export function avgZ(rot: Vector3[], inds: number[]) { const invIndsLen = finv(inds.length); return (inds.reduce((s, i) => s + rot[i].z, 0) * invIndsLen); }
 
     export function avgXYZ(rot: Vector3[], inds: number[]) { const invIndsLen = finv(inds.length);
@@ -409,17 +414,30 @@ namespace Polymesh {
         const wInv = 1/w, hInv = 1/h;
         const fromRowBuf = pins.createBuffer(h);
         const emptyHash = fromRowBuf.hash(0xffff)
+        const pqu = new Ptl(
+            (p1.x - p0.x),
+            (p1.y - p0.y),
+            (p2.x - p3.x),
+            (p2.y - p3.y),
+        )
         for (let sx = 0; sx < w; sx++) {
             const ix = zigzet(0, w-1, sx, center)
             from.getRows(w - ix - 1, fromRowBuf)
             if (fromRowBuf.hash(0xffff) === emptyHash) continue;
             const u0 = (ix * wInv), u1 = ((ix + 1) * wInv);
             const qu = [u0, u1].map(u => (new Ptl(
-                p0.x + (p1.x - p0.x) * u,
-                p0.y + (p1.y - p0.y) * u,
-                p3.x + (p2.x - p3.x) * u,
-                p3.y + (p2.y - p3.y) * u,
+                p0.x + pqu.x0 * u,
+                p0.y + pqu.y0 * u,
+                p3.x + pqu.x1 * u,
+                p3.y + pqu.y1 * u,
             )))
+
+            const pqv = new Ptl(
+                (qu[0].x1 - qu[0].x0),
+                (qu[0].y1 - qu[0].y0),
+                (qu[1].x1 - qu[1].x0),
+                (qu[1].y1 - qu[1].y0),
+            )
             for (let sy = 0; sy < h; sy++, fromRowBuf.shift(-1)) {
                 const iy = zigzet(0, h-1, sy, center)
                 if (fromRowBuf.hash(0xffff) === emptyHash) continue;
@@ -429,8 +447,8 @@ namespace Polymesh {
                 // Map quad on 1 pixel
                 const qv = [v0, v0, v1, v1].map((v, i) => { const i_2 = i & 1;
                     return new Pt(
-                    Math.idiv(qu[i_2].x0 + (qu[i_2].x1 - qu[i_2].x0) * v, 1),
-                    Math.idiv(qu[i_2].y0 + (qu[i_2].y1 - qu[i_2].y0) * v, 1)
+                    Math.idiv(qu[i_2].x0 + (i_2 ? pqv.x1 : pqv.x0) * v, 1),
+                    Math.idiv(qu[i_2].y0 + (i_2 ? pqv.y1 : pqv.y0) * v, 1)
                 )})
                 if (isOutOfAreaOnAvg(qv, to.width, to.height)) if (qv.every(v => isOutOfArea(v.x, v.y, to.width, to.height))) continue; // skipped if out of screen
                 // stamp 2 triangles by pixel

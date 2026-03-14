@@ -1,6 +1,22 @@
 
 namespace Polymesh {
 
+    export class pt2 { constructor(public x: number, public y: number) { }; };
+
+    export class pt2_2 { constructor(public x0: number, public y0: number, public x1: number, public y1: number) { }; };
+
+    export class pt2_4 {
+        constructor(
+            public x0: number, public y0: number, public x1: number, public y1: number,
+            public x2: number, public y2: number, public x3: number, public y3: number,
+        ) { }; get toArr() {
+            return [
+                new pt2(this.x0, this.y0), new pt2(this.x1, this.y1),
+                new pt2(this.x2, this.y2), new pt2(this.x3, this.y3),
+            ]
+        };
+    };
+
     export function iFx8(v: number) {
         switch (v) {
             case 2.0: return Fx.twoFx8;
