@@ -1,4 +1,4 @@
-
+/*
 namespace Polymesh {
 
     class modelDepth { constructor(public mesh: model, public depth: number) { } }
@@ -252,3 +252,4 @@ namespace Polymesh {
     }
 
 }
+*/
