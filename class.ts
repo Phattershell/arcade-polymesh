@@ -1,5 +1,7 @@
 namespace Polymesh {
 
+    class modelDepth { constructor(public mesh: model, public depth: number) { } }
+
     export class base {
         protected __prop_upd: control.FrameCallback; __del: boolean; protected __unDel: boolean; protected __updateLoop: boolean;
         public pos: Motion3; public rot: Motion3;
@@ -183,8 +185,24 @@ namespace Polymesh {
 
         __onLoop() {
             this.pointUpdate();
-            this.render();
+            this.renderMshs(meshAny(), this.viewport);
         }
+
+        renderMshs(mshs: model[], output: Image, lineren?: boolean) {
+        if (this.isDel()) return;
+        const sorted = mshs.map(msh => new modelDepth(msh, msh.zDepth()))
+        if (sorted.length <= 0) return;
+        switch (sort) {
+            case 0x0: sorted.sort((a, b) => b.depth - a.depth); break;
+            case 0x1: quickSort(sorted, (a, b) => b.depth - a.depth); break;
+            case 0x2:
+            default:  duoQuickSort(sorted, (a, b) => b.depth - a.depth); break;
+        }
+        for (const m of sorted) {
+            if (m.mesh.flag.invisible) continue;
+            render(m.mesh, output, lineren);
+        }
+    }
     
         constructor(undel?: boolean, viewport?: Image) {
             super(undel);
