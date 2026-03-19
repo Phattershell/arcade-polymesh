@@ -59,7 +59,7 @@ namespace Polymesh {
     //% group="render"
     //% weight=9qee
     export function setCamViewport(viewport: Image) {
-        
+        camview.setViewport(viewport);
     }
 
 }
