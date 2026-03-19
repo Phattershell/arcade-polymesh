@@ -5,12 +5,17 @@ namespace Polymesh {
     
     export class view extends base {
 
-        points: Vector3[]; zoom: number; near: number; far: number; tpoints: Vector3[]; viewport: Image;
+        points: Vector3[]; zoom: number; near: number; far: number; tpoints: Vector3[]; private viewport: Image;
 
         setViewport(viewport: Image) {
             if (this.viewport.width === viewport.width &&
                 this.viewport.height === viewport.height) return;
+            this.viewport.fill(0);
             this.viewport = viewport;
+        }
+
+        getViewport() {
+            return this.viewport;
         }
 
         initView() {
