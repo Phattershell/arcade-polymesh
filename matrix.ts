@@ -65,17 +65,17 @@ namespace Polymesh {
         //set  y(n: number) { this._y  = Fx8(n); }; get  y() { return Fx.toFloat(this._y);  };
         //set  z(n: number) { this._z  = Fx8(n); }; get  z() { return Fx.toFloat(this._z);  };
 
-        set vx(n: number) { this._vx = Fx8(n); }; get vx() { return Fx.toFloat(this._vx); };
-        set vy(n: number) { this._vy = Fx8(n); }; get vy() { return Fx.toFloat(this._vy); };
-        set vz(n: number) { this._vz = Fx8(n); }; get vz() { return Fx.toFloat(this._vz); };
+        set vx(n: number) { this._vx = iFx8(n); }; get vx() { return Fx.toFloat(this._vx); };
+        set vy(n: number) { this._vy = iFx8(n); }; get vy() { return Fx.toFloat(this._vy); };
+        set vz(n: number) { this._vz = iFx8(n); }; get vz() { return Fx.toFloat(this._vz); };
 
-        set ax(n: number) { this._ax = Fx8(n); }; get ax() { return Fx.toFloat(this._ax); };
-        set ay(n: number) { this._ay = Fx8(n); }; get ay() { return Fx.toFloat(this._ay); };
-        set az(n: number) { this._az = Fx8(n); }; get az() { return Fx.toFloat(this._az); };
+        set ax(n: number) { this._ax = iFx8(n); }; get ax() { return Fx.toFloat(this._ax); };
+        set ay(n: number) { this._ay = iFx8(n); }; get ay() { return Fx.toFloat(this._ay); };
+        set az(n: number) { this._az = iFx8(n); }; get az() { return Fx.toFloat(this._az); };
 
-        set fx(n: number) { this._fx = Fx8(n); }; get fx() { return Fx.toFloat(this._fx); };
-        set fy(n: number) { this._fy = Fx8(n); }; get fy() { return Fx.toFloat(this._fy); };
-        set fz(n: number) { this._fz = Fx8(n); }; get fz() { return Fx.toFloat(this._fz); };
+        set fx(n: number) { this._fx = iFx8(n); }; get fx() { return Fx.toFloat(this._fx); };
+        set fy(n: number) { this._fy = iFx8(n); }; get fy() { return Fx.toFloat(this._fy); };
+        set fz(n: number) { this._fz = iFx8(n); }; get fz() { return Fx.toFloat(this._fz); };
 
         update(delta: Fx8) {
             if (this._ax !== Fx.zeroFx8) this._vx = Fx.add(this._vx, Fx.mul(this._ax, delta));

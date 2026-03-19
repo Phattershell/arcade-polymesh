@@ -56,10 +56,18 @@ namespace Polymesh {
 
     //% blockId=poly_camera_viewport_set
     //% block=" set camera viewport image to $viewport=image_picker"
-    //% group="render"
-    //% weight=9qee
+    //% group="main camera"
+    //% weight=3
     export function setCamViewport(viewport: Image) {
         camview.setViewport(viewport);
+    }
+
+    //% blockId=poly_camera_viewport_get
+    //% block=" get camera viewport image"
+    //% group="main camera"
+    //% weight=2
+    export function getCamViewport() {
+        return camview.getViewport();
     }
 
 }
