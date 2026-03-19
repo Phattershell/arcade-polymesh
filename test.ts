@@ -205,9 +205,11 @@ game.onUpdate(function () {
     Polymesh.setCam(PolyCam.x, Math.min(Math.max(Polymesh.getCam(PolyCam.x), -80), 80))
     //})
 })
+/*
 game.onUpdate(function () {
     //control.runInParallel(() => {
-    scene.setBackgroundImage(image.create(scene.screenWidth(), scene.screenHeight()))
-    Polymesh.renderAll(PolyKind.obj, scene.backgroundImage())
+    //scene.setBackgroundImage(image.create(scene.screenWidth(), scene.screenHeight()))
+    //Polymesh.renderAll(PolyKind.obj, scene.backgroundImage())
     //})
 })
+*/

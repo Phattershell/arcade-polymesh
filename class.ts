@@ -161,7 +161,7 @@ namespace Polymesh {
         points: Vector3[]; zoom: number; near: number; far: number; tpoints: Vector3[]; viewport: Image;
 
         setViewport(viewport: Image) {
-            if (this.viewport.width  === viewport.widrh &&
+            if (this.viewport.width  === viewport.width &&
                 this.viewport.height === viewport.height) return;
             this.viewport = viewport;
         }
@@ -182,7 +182,7 @@ namespace Polymesh {
 
         __onDel() {
             this.points = [];
-            this.vpoints = [];
+            this.tpoints = [];
             this.viewport = null;
             this.zoom = null;
             this.near = null;
@@ -190,6 +190,7 @@ namespace Polymesh {
         }
 
         __onLoop() {
+            this.viewport.fill(0);
             this.pointUpdate();
             this.renderMshs(meshAny(), this.viewport);
         }
@@ -206,7 +207,7 @@ namespace Polymesh {
         }
         for (const m of sorted) {
             if (m.mesh.flag.invisible) continue;
-            render(m.mesh, output, lineren);
+            this.render(m.mesh, output, lineren);
         }
     }
     
