@@ -20,12 +20,9 @@ namespace Polymesh {
          * สูตร: f(x) ≈ a*x^2 + b*x + c
          * สำหรับช่วง [0.5, 1.0] สัมประสิทธิ์ที่เหมาะสมคือ:
          */
-        const a = 1.4545;
-        const b = -4.3636;
-        const c = 3.9091;
 
         // คำนวณด้วย Horner's Method: (a*x + b)*x + c
-        let y = (a * x + b) * x + c;
+        let y = (1.4545 * x + -4.3636) * x + 3.9091;
 
         // 3. Scaling กลับ
         return y * scale;
@@ -85,19 +82,14 @@ namespace Polymesh {
          * สูตรพหุนามกำลัง 4 ที่ปรับจูนมาเพื่อช่วง [0.5, 2.0]
          * f(x) = a + bx + cx^2 + dx^3 + ex^4
          */
-        const a = 0.16541;
-        const b = 1.34135;
-        const c = -0.73949;
-        const d = 0.29323;
-        const e = -0.05282;
 
         // ใช้ Horner's Method เพื่อประหยัดการคูณ (เหลือการคูณแค่ 4 ครั้ง)
         // res = (((e*x + d)*x + c)*x + b)*x + a
-        let res = e;
-        res = res * x + d;
-        res = res * x + c;
-        res = res * x + b;
-        res = res * x + a;
+        let res = -0.05282;
+        res = res * x + 0.29323;
+        res = res * x + -0.73949;
+        res = res * x + 1.34135;
+        res = res * x + 0.16541;
 
         // 3. Scale กลับไปยังค่าเดิม
         return res * scale;
@@ -128,24 +120,23 @@ namespace Polymesh {
         let err = dx >> 1;   // หรือใช้ bit shift >>1 ถ้าต้องการ integer แท้ ๆ
 
         const ystep = y0 < y1 ? 1 : -1;
-        let y = y0;
 
         const nextErr = () => {
             err -= dy;
             if (err < 0)
-                y += ystep,
+                y0 += ystep,
                 err += dx;
         }
 
-        for (let x = x0; x <= x1; x++, nextErr()) {
+        for (; x0 <= x1; x0++, nextErr()) {
             if (steep) {
-                if (y <  0 || x <  0) continue;
-                if (y >= w || x >= h) break;
-                pic.setPixel(y, x, color);
+                if (y0 <  0 || x0 <  0) continue;
+                if (y0 >= w || x0 >= h) break;
+                pic.setPixel(y0, x0, color);
             } else {
-                if (x <  0 || y <  0) continue;
-                if (x >= w || y >= h) break;
-                pic.setPixel(x, y, color);
+                if (x0 <  0 || y0 <  0) continue;
+                if (x0 >= w || y0 >= h) break;
+                pic.setPixel(x0, y0, color);
             }
         }
     }
@@ -282,9 +273,9 @@ namespace Polymesh {
         // ค่า faceOffset > 0 = ผ่อนปรนมากขึ้น (ยาก cull)
         // ค่า faceOffset < 0 = เข้มงวดขึ้น (ง่าย cull)
 
-        const GLOBAL_CULL_BIAS = 0.01; // หรือ 0.0001 ขึ้นกับ scale ของคุณ
+        //const GLOBAL_CULL_BIAS = 0.01; // หรือ 0.0001 ขึ้นกับ scale ของคุณ
 
-        const CULLED = dot <= (GLOBAL_CULL_BIAS + (faceOffset || 0));
+        const CULLED = dot <= (0.01 + (faceOffset || 0));
         if (faceOffset > 0) return !CULLED
         return CULLED
     }
@@ -460,7 +451,7 @@ namespace Polymesh {
         const wInv = 1/w, hInv = 1/h;
         const fromRowBuf = pins.createBuffer(h);
         const emptyHash = fromRowBuf.hash(0xffff)
-        const pqu = new Ptl(
+        const pqu = new pt2_2(
             (p1.x - p0.x),
             (p1.y - p0.y),
             (p2.x - p3.x),
@@ -471,35 +462,44 @@ namespace Polymesh {
             from.getRows(w - ix - 1, fromRowBuf)
             if (fromRowBuf.hash(0xffff) === emptyHash) continue;
             const u0 = (ix * wInv), u1 = ((ix + 1) * wInv);
-            const qu = [u0, u1].map(u => (new Ptl(
-                p0.x + pqu.x0 * u,
-                p0.y + pqu.y0 * u,
-                p3.x + pqu.x1 * u,
-                p3.y + pqu.y1 * u,
-            )))
-
-            const pqv = new Ptl(
-                (qu[0].x1 - qu[0].x0),
-                (qu[0].y1 - qu[0].y0),
-                (qu[1].x1 - qu[1].x0),
-                (qu[1].y1 - qu[1].y0),
+            const qu = new pt2_4(
+                p0.x + pqu.x0 * u0,
+                p0.y + pqu.y0 * u0,
+                p3.x + pqu.x1 * u0,
+                p3.y + pqu.y1 * u0,
+                p0.x + pqu.x0 * u1,
+                p0.y + pqu.y0 * u1,
+                p3.x + pqu.x1 * u1,
+                p3.y + pqu.y1 * u1,
             )
-            for (let sy = 0; sy < h; sy++, fromRowBuf.shift(-1)) {
+
+            const pqv = new pt2_2(
+                (qu.x1 - qu.x0),
+                (qu.y1 - qu.y0),
+                (qu.x3 - qu.x2),
+                (qu.y3 - qu.y2),
+            )
+            for (let sy = 0; sy < h; sy++) {
                 const iy = zigzet(0, h-1, sy, center)
-                if (fromRowBuf.hash(0xffff) === emptyHash) continue;
-                const color = fromRowBuf[0]
+                const color = fromRowBuf[iy]
                 if (color < 1) continue;// transparent
                 const v0 = (iy * hInv), v1 = ((iy + 1) * hInv);
                 // Map quad on 1 pixel
-                const qv = [v0, v0, v1, v1].map((v, i) => { const i_2 = i & 1;
-                    return new Pt(
-                    Math.idiv(qu[i_2].x0 + (i_2 ? pqv.x1 : pqv.x0) * v, 1),
-                    Math.idiv(qu[i_2].y0 + (i_2 ? pqv.y1 : pqv.y0) * v, 1)
-                )})
-                if (isOutOfAreaOnAvg(qv, to.width, to.height)) if (qv.every(v => isOutOfArea(v.x, v.y, to.width, to.height))) continue; // skipped if out of screen
+
+                const qv = new pt2_4(
+                    (qu.x0 + (pqv.x0) * v0) | 0,
+                    (qu.y0 + (pqv.y0) * v0) | 0,
+                    (qu.x2 + (pqv.x1) * v0) | 0,
+                    (qu.y2 + (pqv.y1) * v0) | 0,
+                    (qu.x0 + (pqv.x0) * v1) | 0,
+                    (qu.y0 + (pqv.y0) * v1) | 0,
+                    (qu.x2 + (pqv.x1) * v1) | 0,
+                    (qu.y2 + (pqv.y1) * v1) | 0,
+                )
+                if (qv.toArr.every(v => isOutOfArea(v.x, v.y, to.width, to.height))) continue; // skipped if out of screen
                 // stamp 2 triangles by pixel
-                helpers.imageFillTriangle(to, qv[1].x, qv[1].y, qv[0].x, qv[0].y, qv[3].x, qv[3].y, color);
-                helpers.imageFillTriangle(to, qv[2].x, qv[2].y, qv[0].x, qv[0].y, qv[3].x, qv[3].y, color);
+                helpers.imageFillTriangle(to, qv.x1, qv.y1, qv.x0, qv.y0, qv.x3, qv.y3, color);
+                helpers.imageFillTriangle(to, qv.x2, qv.y2, qv.x0, qv.y0, qv.x3, qv.y3, color);
                 //helpers.imageFillPolygon4(to, qd[3].x, qd[3].y, qd[2].x, qd[2].y, qd[0].x, qd[0].y, qd[1].x, qd[1].y, colorIdx);
             }
         }
@@ -525,10 +525,9 @@ namespace Polymesh {
 
     export const meshDepthZ = (msh: model) => {
         if (msh.isDel()) return NaN;
-        const pos = camview.pos, rot = camview.rot;
-        return rotatePoint3Dyxz(new Vector3(msh.pos.x, msh.pos.y, msh.pos.z), new Vector3(pos.x, pos.y, pos.z), new Vector3(rot.x, rot.y, rot.z)).z;
+        return rotatePoint3Dyxz(msh.pos.toVector(), camview.pos.toVector(), camview.rot.toVector()).z;
     }
 
-    export const meshDistZ = (msh: model) => (Math.abs(dist) / (Math.abs(dist) + meshDepthZ(msh)))
+    export const meshDistZ = (msh: model) => (Math.abs(camview.near) / (Math.abs(camview.near) + meshDepthZ(msh)))
 
 }

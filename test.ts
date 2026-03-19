@@ -133,6 +133,7 @@ Polymesh.sortingMethod(PolySort.quick)
 
 setupMesh()
 game.onUpdate(function () {
+    control.runInParallel(() => {
     for (let value2 of Polymesh.meshAll(PolyKind.obj)) {
         value2.setPos(PolyPos.az, controller.dy() * (moveSpeed / 2))
         if (value2.getPos(PolyPos.z) < 0 - cubeSize * 3) {
@@ -185,8 +186,10 @@ game.onUpdate(function () {
         myMesh = value2
         const hash = Polymesh.hashImage(value2.getFaceImage(0))
     }
+    })
 })
 game.onUpdate(function () {
+    control.runInParallel(() => {
     Polymesh.setCam(PolyCam.ay, 500)
     if (Polymesh.getCam(PolyCam.y) >= 0) {
         Polymesh.setCam(PolyCam.vy, 0)
@@ -197,8 +200,11 @@ game.onUpdate(function () {
     Polymesh.setCam(PolyCam.y, Math.min(Polymesh.getCam(PolyCam.y), 0))
     Polymesh.setCam(PolyCam.vx, controller.dx() * (moveSpeed / 4))
     Polymesh.setCam(PolyCam.x, Math.min(Math.max(Polymesh.getCam(PolyCam.x), -80), 80))
+    })
 })
 game.onUpdate(function () {
+    control.runInParallel(() => {
     scene.setBackgroundImage(image.create(scene.screenWidth(), scene.screenHeight()))
     Polymesh.renderAll(PolyKind.obj, scene.backgroundImage())
+    })
 })

@@ -79,18 +79,19 @@ namespace Polymesh {
         }
 
         // Render
-        let cx: number, cy: number, range: number, square: number, im: Image
+        let range: number
         for (let i = 0;i < tris.length;i++) {
             const t = tris[i]
             const inds = t.indices;
             if (inds.some(i => (rotated[i].z < -Math.abs(dist) || (fardist > 0 && rotated[i].z > Math.abs(fardist))))) continue;
-            const inds_ = [];
-            if (inds.length > 2) inds_[0] = [t.indices[0], t.indices[1], t.indices[2]];
-            if (inds.length > 3) inds_[1] = [t.indices[3], t.indices[1], t.indices[2]];
+            //const inds_ = [];
+            //if (inds.length > 2) inds_[0] = [t.indices[0], t.indices[1], t.indices[2]];
+            //if (inds.length > 3) inds_[1] = [t.indices[3], t.indices[1], t.indices[2]];
             const scale = (Math.abs(dist) * finv(Math.abs(dist) + avgZ(rotated, t.indices)));
             // LOD calculating?
+            let im: Image = null
             if (t.img) {
-                im = t.img.clone();
+                im = t.img;
                 if (msh.flag.texStream) {
                     let scaleD = finv(scale * zoom) * 0.2;
                     scaleD = Math.clamp(0, t.imgs.length-1, Math.round((1.25-scaleD) * (t.imgs.length-1)));
@@ -103,35 +104,30 @@ namespace Polymesh {
                 const pt = rotated[idx];
 
                 // center image
-                cx = pt.x;
-                cy = pt.y;
+                const bq = new pt2_4(
+                    pt.x, pt.y,
+                    pt.x, pt.y,
+                    pt.x, pt.y,
+                    pt.x, pt.y,
+                )
 
-                const bq = [
-                    { x: cx, y: cy },
-                    { x: cx, y: cy },
-                    { x: cx, y: cy },
-                    { x: cx, y: cy },
-                ]
-
-                square = dist + (2048 * (scale * t.scale) * zoom)
+                const square = dist + (2048 * (scale * t.scale) * zoom)
                 if (im) {
                     // set scale image from camera distance
-                    const baseW = im.width;
-                    const baseH = im.height;
-                    const halfW = (baseW * 0.33333333) * scale * t.scale * zoom;
-                    const halfH = (baseH * 0.33333333) * scale * t.scale * zoom;
+                    const halfW = (im.width  * 0.33333333) * scale * t.scale * zoom;
+                    const halfH = (im.height * 0.33333333) * scale * t.scale * zoom;
 
-                    bq[0].x += halfW, bq[0].y += halfH
-                    bq[1].x -= halfW, bq[1].y += halfH
-                    bq[2].x += halfW, bq[2].y -= halfH
-                    bq[3].x -= halfW, bq[3].y -= halfH
-                    if (bq.every(v => (isOutOfArea(v.x, v.y, output.width, output.height)))) continue;
+                    bq.x0 += halfW, bq.y0 += halfH
+                    bq.x1 -= halfW, bq.y1 += halfH
+                    bq.x2 += halfW, bq.y2 -= halfH
+                    bq.x3 -= halfW, bq.y3 -= halfH
+                    if (bq.toArr.every(v => (isOutOfArea(v.x, v.y, output.width, output.height)))) continue;
                 } else {
-                    bq[0].x += square, bq[0].y += square
-                    bq[1].x -= square, bq[1].y += square
-                    bq[2].x += square, bq[2].y -= square
-                    bq[3].x -= square, bq[3].y -= square
-                    if (bq.every(v => (isOutOfArea(v.x, v.y, output.width, output.height)))) continue;
+                    bq.x0 += square, bq.y0 += square
+                    bq.x1 -= square, bq.y1 += square
+                    bq.x2 += square, bq.y2 -= square
+                    bq.x3 -= square, bq.y3 -= square
+                    if (bq.toArr.every(v => (isOutOfArea(v.x, v.y, output.width, output.height)))) continue;
                 }
             } else if (isOutOfAreaOnFace(rotated, inds, output.width, output.height)) if (inds.every(i => isOutOfArea(rotated[i].x, rotated[i].y, output.width, output.height))) continue;
 
@@ -147,21 +143,17 @@ namespace Polymesh {
             const idx = t.indices[0];
             const pt = rotated[idx];
             // center image
-            cx = pt.x;
-            cy = pt.y;
 
-            square = dist + (2048 * (scale * t.scale) * zoom)
+            let square = dist + (2048 * (scale * t.scale) * zoom)
 
             let halfW = square + dist;
             let halfH = square + dist;
 
             if (t.img) {
                 // set scale image from camera distance
-                const baseW = im.width;
-                const baseH = im.height;
 
-                halfW = (baseW * 0.33333333) * scale * t.scale * zoom;
-                halfH = (baseH * 0.33333333) * scale * t.scale * zoom;
+                halfW = (im.width  * 0.33333333) * scale * t.scale * zoom;
+                halfH = (im.height * 0.33333333) * scale * t.scale * zoom;
 
                 square = Polymesh.gcd(halfW, halfH)
             };
@@ -170,10 +162,10 @@ namespace Polymesh {
                 if (pt.z < -Math.abs(dist)) continue;
 
                 // when no image
-                if (!t.img) { fillCircleImage(output, cx, cy, square, t.color); continue; }
+                if (!t.img) { fillCircleImage(output, pt.x, pt.y, square, t.color); continue; }
 
                 // fill circle if image is empty
-                if (isEmptyImage(t.img)) { fillCircleImage(output, cx, cy, square, t.color); continue; }
+                if (isEmptyImage(t.img)) { fillCircleImage(output, pt.x, pt.y, square, t.color); continue; }
 
                 halfW *= 0.75;
                 halfH *= 0.75;
@@ -182,10 +174,10 @@ namespace Polymesh {
                 // use distortImage or drawing without perspective distortion
                 // I will use distortImage draw as vertex quad
                 distortImage(im, output,
-                    cx + halfW, cy - halfH,
-                    cx - halfW, cy - halfH,
-                    cx - halfW, cy + halfH,
-                    cx + halfW, cy + halfH
+                    pt.x + halfW, pt.y - halfH,
+                    pt.x - halfW, pt.y - halfH,
+                    pt.x - halfW, pt.y + halfH,
+                    pt.x + halfW, pt.y + halfH
                 );
                 continue;
             }

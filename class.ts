@@ -10,9 +10,11 @@ namespace Polymesh {
     
         loop() {
             this.__prop_upd = control.eventContext().registerFrameHandler(scene.PRE_RENDER_UPDATE_PRIORITY, () => {
-                const delta = Fx8(control.eventContext().deltaTime)
-                this.rot.update(delta), this.pos.update(delta);
-                this.__onLoop();
+                control.runInParallel(() => {
+                    const delta = Fx8(control.eventContext().deltaTime)
+                    this.rot.update(delta), this.pos.update(delta);
+                    this.__onLoop();
+                })
             });
         }
     
@@ -244,7 +246,8 @@ namespace Polymesh {
         //% group="mesh kind"
         //% weight=11
         setKind(id: number) {
-            if (this.kind === Math.floor(id)) return;
+            id |= 0;
+            if (this.kind === id) return;
             Polymesh.__meshes_upd_kind(this, id)
         }
     
@@ -255,7 +258,7 @@ namespace Polymesh {
         //% group="mesh kind"
         //% weight=9
         getKind() {
-            return Math.floor(this.kind);
+            return this.kind;
         }
     
         protected makeFaceImgStack(idx: number, img: Image) {
@@ -263,8 +266,7 @@ namespace Polymesh {
             //this.faces_imgs_cache_stack[idx].unshift(img);
             if (this.faces_imgs_cache_stack[idx].length > 8) {
                 const oldImg = this.faces_imgs_cache_stack[idx].pop();
-                const oldImgh = Polymesh.hashImage(oldImg);
-                const oldidx = this.faces_imgs[idx].imgID.indexOf(oldImgh)
+                const oldidx = this.faces_imgs[idx].imgID.indexOf(hashImage(oldImg))
                 this.faces_imgs[idx].imgDB[oldidx] = [];
                 this.faces_imgs[idx].imgID[oldidx] = null;
             }
@@ -291,8 +293,7 @@ namespace Polymesh {
                 const cimg = this.faces[i].img
                 if (!cimg) return false;
                 this.makeFaceImgStack(i, cimg)
-                const imgh = Polymesh.hashImage(cimg);
-                const hidx = v.imgID.indexOf(imgh)
+                const hidx = v.imgID.indexOf(hashImage(cimg))
                 return v.imgID[hidx] != null;
             })
             if (imgNewData.length <= 0) return;
@@ -327,12 +328,11 @@ namespace Polymesh {
             const cimg = im ? im : (this.faces[idx].img ? this.faces[idx].img : null);
             if (!cimg) return;
             const square = Polymesh.gcd(cimg.width, cimg.height) * Math.abs(cimg.width * cimg.height)
-            const imgh = Polymesh.hashImage(cimg)
             if (!this.faces_imgs[idx]) this.faces_imgs[idx] = new Polymesh.FaceImg()
-            let hidx = this.faces_imgs[idx].imgID.indexOf(imgh);
+            let hidx = this.faces_imgs[idx].imgID.indexOf(hashImage(cimg));
             if (!this.faces_imgs[idx].imgDB[hidx]) this.faces_imgs[idx].imgDB[hidx] = [];
             else if (this.faces_imgs[idx].imgDB[hidx] != null && this.faces_imgs[idx].imgDB[hidx][this.faces_imgs[idx].imgDB[hidx].length - 1].equals(cimg)) return;
-            if (hidx < 0) this.faces_imgs[idx].imgID.push(imgh), hidx = this.faces_imgs[idx].imgID.length - 1;
+            if (hidx < 0) this.faces_imgs[idx].imgID.push(hashImage(cimg)), hidx = this.faces_imgs[idx].imgID.length - 1;
             this.newFaceImgStack(idx, cimg)
             this.faces_imgs[idx].imgDB[hidx] = [];
             if (Polymesh.isEmptyImage(cimg)) {
@@ -377,7 +377,7 @@ namespace Polymesh {
                 const vscale = this.makeScale(v);
                 const vpoint = new Polymesh.Vector3(this.pos.x + vscale.x, this.pos.y + vscale.y, this.pos.z + vscale.z );
                 const vpivot = new Polymesh.Vector3(this.pos.x + this.pivot.x, this.pos.y + this.pivot.y, this.pos.z + this.pivot.z );
-                return f(Polymesh.rotatePoint3Dxyz(vpoint, vpivot, new Polymesh.Vector3(this.rot.x, this.rot.y, this.rot.z)));
+                return f(Polymesh.rotatePoint3Dxyz(vpoint, vpivot, this.rot.toVector()));
             })
         };
     
@@ -399,11 +399,19 @@ namespace Polymesh {
             super();
             this.scale = 1;
             this.kind = kind || 0;
+            this.kind |= 0;
             this.idx = idx || 0;
+            this.idx |= 0;
         }
     
         __onDel() {
-            this.faces_imgs_cache_stack = null, this.faces_imgs = null, this.faces = null, this.points = null, this.pivot = null, this.flag = null, this.data = null;
+            this.faces_imgs_cache_stack = null;
+            this.faces_imgs = null;
+            this.faces = null;
+            this.points = null;
+            this.pivot = null;
+            this.flag = null;
+            this.data = null;
             Polymesh.__meshes_del(this);
         }
     

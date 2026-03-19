@@ -30,7 +30,7 @@ namespace Polymesh {
     export const PHI = 1.6180339887, NORMAL_DIST = 1.665, LOD_DIST = 1.2
 
     export const camview = new view(true);
-    export let zoom = 1, sort = 0x0, dist = 150, fardist = 0;
+    export let sort = 0x0;
 
     export function __meshes_upd_kind(msh: model, kind: number) {
         if (msh.kind === (kind | 0)) return;
