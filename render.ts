@@ -6,17 +6,15 @@ namespace Polymesh {
     export function renderMshs(mshs: model[], output: Image, lineren?: boolean) {
         const sorted = mshs.map(msh => new modelDepth(msh, msh.zDepth()))
         if (sorted.length <= 0) return;
-        control.runInParallel(() => {
         switch (sort) {
             case 0x0: sorted.sort((a, b) => b.depth - a.depth); break;
             case 0x1: quickSort(sorted, (a, b) => b.depth - a.depth); break;
             case 0x2:
             default:  duoQuickSort(sorted, (a, b) => b.depth - a.depth); break;
         }
-        })
         for (const m of sorted) {
             if (m.mesh.flag.invisible) continue;
-            control.runInParallel(() => render(m.mesh, output, lineren));
+            render(m.mesh, output, lineren);
         }
     }
 
@@ -78,19 +76,18 @@ namespace Polymesh {
         // Sort triangles
         const trisCMP = (a: Polymesh.FaceLOD, b: Polymesh.FaceLOD) => avgZ(rotated, b.indices) - avgZ(rotated, a.indices)
         const tris = msh.vfaces.slice();
-        control.runInParallel(() => {
+        //control.runInParallel(() => {
         switch (sort) {
             case 0x0: tris.sort((a, b) => trisCMP(a, b)); break;
             case 0x1: quickSort(tris, (a, b) => trisCMP(a, b)); break;
             case 0x2:
             default: duoQuickSort(tris, (a, b) => trisCMP(a, b)); break;
         }
-        })
+        //})
 
         //pause(0);
 
         // Render
-        let range: number
         for (let i = 0;i < tris.length;i++) {
             const t = tris[i]
             const inds = t.indices;
