@@ -160,6 +160,12 @@ namespace Polymesh {
 
         points: Vector3[]; zoom: number; near: number; far: number; tpoints: Vector3[]; viewport: Image;
 
+        setViewport(viewport: Image) {
+            if (this.viewport.width  === viewport.widrh &&
+                this.viewport.height === viewport.height) return;
+            this.viewport = viewport;
+        }
+
         initView() {
             this.points = [
                 new Vector3(0, 0, 1/*, Math.idiv(this.near, 50)*/),
