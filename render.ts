@@ -1,7 +1,7 @@
 
 namespace Polymesh {
 
-    function renderMsh(mshs: model[], output: Image, lineren?: boolean) {
+    export function renderMshs(mshs: model[], output: Image, lineren?: boolean) {
         const sorted = mshs.map(msh => ({ mesh: msh, depth: msh.zDepth() }))
         if (sorted.length <= 0) return;
         switch (sort) {
@@ -10,7 +10,10 @@ namespace Polymesh {
             case 0x2:
             default: duoQuickSort(sorted, (a, b) => b.depth - a.depth); break;
         }
-        for (const m of sorted) if (!m.mesh.flag.invisible) render(m.mesh, output, lineren);
+        for (const m of sorted) {
+            if (m.mesh.flag.invisible) continue;
+            control.runInParallel(() => render(m.mesh, output, lineren));
+        }
     }
 
     //% blockId=poly_rendermesh_all
@@ -19,11 +22,11 @@ namespace Polymesh {
     //% weight=9qee
     export function renderAll(id: number, output: Image, lineren?: boolean) {
         if ((id == null || isNaN(id)) || !output) return;
-        renderMsh(meshAll(id), output, lineren)
+        renderMshs(meshAll(id), output, lineren)
     }
 
     export function renderAny(output: Image, lineren?: boolean) {
-        renderMsh(meshAny(), output, lineren)
+        renderMshs(meshAny(), output, lineren)
     }
 
     //% blockId=poly_rendermesh
@@ -62,8 +65,8 @@ namespace Polymesh {
             // Perspective
             const scale = Math.abs(dist) * finv(Math.abs(dist) + z);
             return new Vector3(
-                centerX + x * scale * zoom,
-                centerY + y * scale * zoom,
+                centerX + (x * scale * zoom),
+                centerY - (y * scale * zoom),
                 z
             );
         });

@@ -58,10 +58,10 @@ function setupMesh() {
         myMesh = Polymesh.create(PolyKind.obj)
         myMesh.setFlag(MeshFlags.cull, false)
         myMesh.setFlag(MeshFlags.texStream, true)
-        myMesh.addVertice(Polymesh.point3Shadow(0 + 2 * cubeSize, 1.5 * cubeSize, 0 + cubeSize))
-        myMesh.addVertice(Polymesh.point3Shadow(0 - 2 * cubeSize, 1.5 * cubeSize, 0 + cubeSize))
-        myMesh.addVertice(Polymesh.point3Shadow(0 + 2 * cubeSize, 1.5 * cubeSize, 0 - cubeSize))
-        myMesh.addVertice(Polymesh.point3Shadow(0 - 2 * cubeSize, 1.5 * cubeSize, 0 - cubeSize))
+        myMesh.addVertice(Polymesh.point3Shadow(0 + 2 * cubeSize, -1.5 * cubeSize, 0 + cubeSize))
+        myMesh.addVertice(Polymesh.point3Shadow(0 - 2 * cubeSize, -1.5 * cubeSize, 0 + cubeSize))
+        myMesh.addVertice(Polymesh.point3Shadow(0 + 2 * cubeSize, -1.5 * cubeSize, 0 - cubeSize))
+        myMesh.addVertice(Polymesh.point3Shadow(0 - 2 * cubeSize, -1.5 * cubeSize, 0 - cubeSize))
         myMesh.addFace(
             0,
             Polymesh.indiceShadow(
@@ -74,10 +74,10 @@ function setupMesh() {
             Polymesh.billSizeShadow(1),
             img`.`
         )
-        myMesh.addVertice(Polymesh.point3Shadow(0 + 20 * cubeSize, 1.5 * cubeSize, 0 + cubeSize))
-        myMesh.addVertice(Polymesh.point3Shadow(0 - 20 * cubeSize, 1.5 * cubeSize, 0 + cubeSize))
-        myMesh.addVertice(Polymesh.point3Shadow(0 + 20 * cubeSize, 1.5 * cubeSize, 0 - cubeSize))
-        myMesh.addVertice(Polymesh.point3Shadow(0 - 20 * cubeSize, 1.5 * cubeSize, 0 - cubeSize))
+        myMesh.addVertice(Polymesh.point3Shadow(0 + 20 * cubeSize, -1.5 * cubeSize, 0 + cubeSize))
+        myMesh.addVertice(Polymesh.point3Shadow(0 - 20 * cubeSize, -1.5 * cubeSize, 0 + cubeSize))
+        myMesh.addVertice(Polymesh.point3Shadow(0 + 20 * cubeSize, -1.5 * cubeSize, 0 - cubeSize))
+        myMesh.addVertice(Polymesh.point3Shadow(0 - 20 * cubeSize, -1.5 * cubeSize, 0 - cubeSize))
         myMesh.addFace(
             0,
             Polymesh.indiceShadow(
@@ -188,16 +188,19 @@ game.onUpdate(function () {
     }
     })
 })
+Polymesh.setCam(PolyCam.ay, -500)
 game.onUpdate(function () {
     control.runInParallel(() => {
-    Polymesh.setCam(PolyCam.ay, 500)
-    if (Polymesh.getCam(PolyCam.y) >= 0) {
+    if (Polymesh.getCam(PolyCam.y) < 0) {
         Polymesh.setCam(PolyCam.vy, 0)
+        Polymesh.changeCam(PolyCam.y, Math.min(0, Polymesh.getCam(PolyCam.ay)))
+        Polymesh.setCam(PolyCam.ay, 0);
     }
-    if (controller.A.isPressed() && Polymesh.getCam(PolyCam.y) >= 0) {
-        Polymesh.setCam(PolyCam.vy, -250)
+    if (controller.A.isPressed() && Polymesh.getCam(PolyCam.y) <= 0) {
+        Polymesh.setCam(PolyCam.vy, 250);
+        Polymesh.setCam(PolyCam.ay, -500);
     }
-    Polymesh.setCam(PolyCam.y, Math.min(Polymesh.getCam(PolyCam.y), 0))
+    Polymesh.setCam(PolyCam.y, Math.max(Polymesh.getCam(PolyCam.y), 0))
     Polymesh.setCam(PolyCam.vx, controller.dx() * (moveSpeed / 4))
     Polymesh.setCam(PolyCam.x, Math.min(Math.max(Polymesh.getCam(PolyCam.x), -80), 80))
     })
