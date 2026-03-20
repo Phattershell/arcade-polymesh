@@ -132,7 +132,7 @@ namespace Polymesh {
                 const scale = Math.abs(dist) * finv(Math.abs(dist) + z);
                 return new Vector3(
                     centerX + (x * scale * zoom),
-                    centerY - (y * scale * zoom),
+                    centerY + (y * scale * zoom),
                     z
                 );
             });
