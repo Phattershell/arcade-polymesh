@@ -164,9 +164,9 @@ namespace Polymesh {
             
         }
 
-        rotateToView(width: number, height: number, cam?: view) {
+        rotateToView(cam?: view) {
             if (cam) this.curcam = cam;
-            const centerX = width >>> 1, centerY = height >>> 1;
+            const centerX = this.curcam.viewport.width >>> 1, centerY = this.curcam.viewport.height >>> 1;
 
             let tmp = 0
             const cosX = fcos(this.curcam.rot.x), sinX = fsin(this.curcam.rot.x);
@@ -371,6 +371,7 @@ namespace Polymesh {
         };
     
         __onLoop() {
+            this.rotateToView();
             this.updImgLodCacheSlot();
             this.updImgLodCache();
         }
