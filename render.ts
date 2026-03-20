@@ -43,9 +43,11 @@ namespace Polymesh {
 
         __onLoop() {
             //pause(100);
+            control.runInParallel(() => {
             this.viewport.fill(0);
             this.pointUpdate();
             this.renderMshs(meshAny(), this.viewport);
+            })
         }
 
         renderMshs(mshs: model[], output: Image, lineren?: boolean) {
@@ -164,10 +166,10 @@ namespace Polymesh {
                 let im: Image = null
                 if (t.img) {
                     im = t.img;
-                    if (msh.flag.texStream) {
-                        let scaleD = finv(scale * zoom) * 0.2;
-                        scaleD = Math.clamp(0, t.imgs.length - 1, Math.round((1.25 - scaleD) * (t.imgs.length - 1)));
-                        im = t.imgs[scaleD]
+                    if (msh.flag.mipmap) {
+                        let mipmapScale = finv(scale * zoom) * 0.2;
+                        mipmapScale = Math.clamp(0, t.imgs.length - 1, Math.round((1.25 - mipmapScale) * (t.imgs.length - 1)));
+                        im = t.imgs[mipmapScale]
                         if (im == null) im = image.create(1, 1)
                     }
                 }

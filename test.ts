@@ -57,7 +57,7 @@ function setupMesh() {
     for (let index = 0; index <= maxMesh; index++) {
         myMesh = Polymesh.create(PolyKind.obj)
         myMesh.setFlag(MeshFlags.cull, false)
-        myMesh.setFlag(MeshFlags.texStream, true)
+        myMesh.setFlag(MeshFlags.mipmap, true)
         myMesh.addVertice(Polymesh.point3Shadow(0 + 2 * cubeSize, 1.5 * cubeSize, 0 + cubeSize))
         myMesh.addVertice(Polymesh.point3Shadow(0 - 2 * cubeSize, 1.5 * cubeSize, 0 + cubeSize))
         myMesh.addVertice(Polymesh.point3Shadow(0 + 2 * cubeSize, 1.5 * cubeSize, 0 - cubeSize))
@@ -144,17 +144,17 @@ game.onUpdate(function () {
         }
         value2.setPos(PolyPos.vz, Math.min(Math.max(value2.getPos(PolyPos.vz), 0 - moveSpeed * 4), moveSpeed * 4))
         if (value2.getPos(PolyPos.z) < (maxMesh - 8.5) * (cubeSize * 2)) {
-            value2.getFaceImage(0).replace(9, 1)
-            value2.getFaceImage(0).replace(7, 1)
+            value2.getFaceImage(0).replace(9, 7)
+            value2.getFaceImage(0).replace(1, 7)
             value2.getFaceImage(0).replace(scene.backgroundColor(), 1)
             if (Polymesh.meshAll(PolyKind.obj).indexOf(value2) % 2 > 0) {
-                value2.setFaceColor(0, 7)
-                value2.setFaceColor(1, 9)
-                value2.setFaceColor(2, 9)
+                value2.setFaceColor(0, 8)
+                value2.setFaceColor(1, 6)
+                value2.setFaceColor(2, 6)
             } else {
-                value2.setFaceColor(0, 9)
-                value2.setFaceColor(1, 7)
-                value2.setFaceColor(2, 7)
+                value2.setFaceColor(0, 6)
+                value2.setFaceColor(1, 8)
+                value2.setFaceColor(2, 8)
             }
         } else if (value2.getPos(PolyPos.z) < (maxMesh - 5.5) * (cubeSize * 2)) {
             value2.getFaceImage(0).replace(1, 9)
@@ -170,17 +170,17 @@ game.onUpdate(function () {
                 value2.setFaceColor(2, 7)
             }
         } else {
-            value2.getFaceImage(0).replace(1, 7)
-            value2.getFaceImage(0).replace(9, 7)
+            value2.getFaceImage(0).replace(7, 1)
+            value2.getFaceImage(0).replace(9, 1)
             value2.getFaceImage(0).replace(scene.backgroundColor(), 7)
             if (Polymesh.meshAll(PolyKind.obj).indexOf(value2) % 2 > 0) {
-                value2.setFaceColor(0, 8)
-                value2.setFaceColor(1, 6)
-                value2.setFaceColor(2, 6)
+                value2.setFaceColor(0, 7)
+                value2.setFaceColor(1, 9)
+                value2.setFaceColor(2, 9)
             } else {
-                value2.setFaceColor(0, 6)
-                value2.setFaceColor(1, 8)
-                value2.setFaceColor(2, 8)
+                value2.setFaceColor(0, 9)
+                value2.setFaceColor(1, 7)
+                value2.setFaceColor(2, 7)
             }
         }
         myMesh = value2
@@ -188,7 +188,7 @@ game.onUpdate(function () {
     }
     //})
 })
-Polymesh.setCam(PolyCam.ay, 500)
+//Polymesh.setCam(PolyCam.ay, 500)
 game.onUpdate(function () {
     //control.runInParallel(() => {
     if (Polymesh.getCam(PolyCam.y) > 0) {

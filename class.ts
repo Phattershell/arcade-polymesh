@@ -232,7 +232,7 @@ namespace Polymesh {
         }
     
         protected updImgLodCache() {
-            if (!this.flag.texStream) return;
+            if (!this.flag.mipmap) return;
             const imgNewData = this.faces_imgs.filter((v, i) => {
                 const cimg = this.faces[i].img
                 if (!cimg) return false;
@@ -249,7 +249,7 @@ namespace Polymesh {
         }
     
         protected updImgLodCacheSlot() {
-            if (!this.flag.texStream) return;
+            if (!this.flag.mipmap) return;
             if (this.faces_imgs.length === this.faces.length) return;
             if (this.faces.length > this.faces_imgs.length) {
                 while (this.faces.length > this.faces_imgs.length) {
@@ -453,7 +453,7 @@ namespace Polymesh {
             switch (flag) {
                 case 0x0: default: this.flag.invisible = ok; break;
                 case 0x1:          this.flag.cull      = ok; break;
-                case 0x2:          this.flag.texStream = ok; break;
+                case 0x2:          this.flag.mipmap    = ok; break;
                 case 0x3:          this.flag.lod       = ok; break;
             }
         }
@@ -469,7 +469,7 @@ namespace Polymesh {
             switch (flag) {
                 case 0x0: default: return this.flag.invisible;
                 case 0x1:          return this.flag.cull;
-                case 0x2:          return this.flag.texStream;
+                case 0x2:          return this.flag.mipmap;
                 case 0x3:          return this.flag.lod;
             }
             return false

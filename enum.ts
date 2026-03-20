@@ -104,8 +104,8 @@ enum MeshFlags {
     invisible = 0x0,
     //% block="Culling"
     cull      = 0x1,
-    //% block="texture stream"
-    texStream = 0x2,
+    //% block="texture mipmap"
+    mipmap = 0x2,
     //% block="Level of detail"
     lod       = 0x3,
 }

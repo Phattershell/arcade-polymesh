@@ -8,8 +8,8 @@ namespace Polymesh {
     public copy(from: FaceImg) { this.imgID = from.imgID.slice(); this.imgDB = from.imgDB.slice(); };
     public toHash(img: Image) { return hashImage(img); }
     }
-    export class FlagMesh { public invisible: boolean; cull: boolean; lod: boolean; texStream: boolean;
-    constructor() { this.invisible = false; this.cull = false; this.lod = false; this.texStream = false; } }
+    export class FlagMesh { public invisible: boolean; cull: boolean; lod: boolean; mipmap: boolean;
+    constructor() { this.invisible = false; this.cull = false; this.lod = false; this.mipmap = false; } }
 
     export class Face { public indices: number[]; public color: number; public offset?: number; public scale?: number; public img?: Image;
     constructor(indices: number[], color: number, offset?: number, scale?: number, img?: Image) {
