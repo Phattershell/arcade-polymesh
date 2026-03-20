@@ -50,19 +50,20 @@ namespace Polymesh {
             })
         }
 
-        renderMshs(mshs: model[], output: Image, lineren?: boolean) {
+        private renderMshs(mshs: model[], output: Image, lineren?: boolean) {
             if (this.isDel()) return;
-            const sorted = mshs.map(msh => new modelDepth(msh, msh.zDepth()))
+            const sorted = mshs.slice();
             if (sorted.length <= 0) return;
+            const cmp = (a: model, b: model) => (b.zDepth() - a.zDepth());
             switch (sort) {
-                case 0x0: sorted.sort((a, b) => b.depth - a.depth); break;
-                case 0x1: quickSort(sorted, (a, b) => b.depth - a.depth); break;
+                case 0x0: sorted.sort(cmp); break;
+                case 0x1: quickSort(sorted, cmp); break;
                 case 0x2:
-                default: duoQuickSort(sorted, (a, b) => b.depth - a.depth); break;
+                default: duoQuickSort(sorted, cmp); break;
             }
             for (const m of sorted) {
-                if (m.mesh.flag.invisible) continue;
-                this.render(m.mesh, output, lineren);
+                if (m.flag.invisible) continue;
+                this.render(m, output, lineren);
             }
         }
 
@@ -101,7 +102,7 @@ namespace Polymesh {
             }; return super.getPos(choice);
         }
 
-        render(msh: model, output: Image, lineren?: boolean) {
+        private render(msh: model, output: Image, lineren?: boolean) {
             if (this.isDel()) return;
             if (msh.isDel()) return;
             if (!msh || !output || msh.points.length <= 0 || msh.faces.length <= 0) return;
@@ -140,18 +141,16 @@ namespace Polymesh {
             });
 
             // Sort triangles
-            const trisCMP = (a: Polymesh.FaceLOD, b: Polymesh.FaceLOD) => avgZ(rotated, b.indices) - avgZ(rotated, a.indices)
+            const cmp = (a: Polymesh.FaceLOD, b: Polymesh.FaceLOD) => avgZ(rotated, b.indices) - avgZ(rotated, a.indices)
             const tris = msh.vfaces.slice();
             //control.runInParallel(() => {
             switch (sort) {
-                case 0x0: tris.sort((a, b) => trisCMP(a, b)); break;
-                case 0x1: quickSort(tris, (a, b) => trisCMP(a, b)); break;
+                case 0x0: tris.sort(cmp); break;
+                case 0x1: quickSort(tris, cmp); break;
                 case 0x2:
-                default: duoQuickSort(tris, (a, b) => trisCMP(a, b)); break;
+                default: duoQuickSort(tris, cmp); break;
             }
             //})
-
-            //pause(0);
 
             // Render
             for (let i = 0; i < tris.length; i++) {
@@ -169,6 +168,18 @@ namespace Polymesh {
                     if (msh.flag.mipmap) {
                         let mipmapScale = finv(scale * zoom) * 0.2;
                         mipmapScale = Math.clamp(0, t.imgs.length - 1, Math.round((1.25 - mipmapScale) * (t.imgs.length - 1)));
+                        if (inds.length > 2) {
+                            let points = [
+                                new pt2(rotated[inds[0]].x, rotated[inds[0]].y),
+                                new pt2(rotated[inds[1]].x, rotated[inds[1]].y),
+                                new pt2(rotated[inds[2]].x, rotated[inds[2]].y),
+                            ]
+                            if (inds.length > 3) points.push(new pt2(rotated[inds[3]].x, rotated[inds[3]].y))
+                            mipmapScale = findBestMipmapIndexFromPoints(points, t.imgs)
+                        }
+                        if (mipmapScale > -1)
+                            mipmapScale = finv(scale * zoom) * 0.2,
+                            mipmapScale = Math.clamp(0, t.imgs.length - 1, Math.round((1.25 - mipmapScale) * (t.imgs.length - 1)));
                         im = t.imgs[mipmapScale]
                         if (im == null) im = image.create(1, 1)
                     }
@@ -319,3 +330,4 @@ namespace Polymesh {
     }
 
 }
+

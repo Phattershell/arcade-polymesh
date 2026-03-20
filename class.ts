@@ -289,7 +289,7 @@ namespace Polymesh {
                 this.faces_imgs[idx].imgDB[hidx].push(img.clone());
                 const scaleD = scale;
                 img = image.create(Math.max(1, Math.trunc(scaleD * cimg.width)), Math.max(1, Math.trunc(scaleD * cimg.height)));
-                scale += square * (scale * 0.00005);
+                scale += square * (scale * 0.00009);
             } this.faces_imgs[idx].imgDB[hidx].push(cimg.clone());
         }
     

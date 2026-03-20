@@ -1,10 +1,48 @@
 
 namespace Polymesh {
 
+    export function findBestMipmapIndexFromPoints(points: pt2[], mipmapImgs: Image[]): number {
+        let minY = Infinity, maxY = -Infinity;
+        let minX = Infinity, maxX = -Infinity;
+
+        for (const pt of points) {
+            minY = Math.min(minY, pt.y);
+            minX = Math.min(minX, pt.x);
+            maxY = Math.max(maxY, pt.y);
+            maxX = Math.max(maxX, pt.x);
+        }
+
+        const bboxW = Math.abs(maxX - minX);
+        const bboxH = Math.abs(maxY - minX);
+
+        const tragetArea = (bboxW * bboxH);
+        if (tragetArea <= 0 || mipmapImgs.length <= 0) return -1;
+
+        let bestIndex = -1;
+        let smallestDiff = Infinity;
+
+        for (let i = mipmapImgs.length - 1; i >= 0; i--) {
+            const v = mipmapImgs[i];
+            const scale = Math.min(v.width / bboxW, v.height / bboxH);
+            const outW = bboxW * scale;
+            const outH = bboxH * scale;
+            const outArea = outW * outH;
+            const diff = Math.abs(outArea - tragetArea);
+            const diffPercent = ((diff / tragetArea) * 0xffff)|0;
+            if (diffPercent < smallestDiff) {
+                smallestDiff = diffPercent;
+                bestIndex = i;
+            }
+        }
+        if (bestIndex > -1) return bestIndex;
+        return -1
+    }
+
     const PI0_0111_ = Math.PI * 0.111111111111111;
 
     export function finv(x: number): number {
         if (x === 0) return Infinity;
+        if (x === Infinity) return 0;
         if (x < 0) return -finv(-x);
         x += PI0_0111_;
 
