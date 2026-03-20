@@ -156,57 +156,12 @@ namespace Polymesh {
     
     export class model extends base {
     
-        _faces: Polymesh.Face[]; _points: Polymesh.Vector3[]; pivot: Polymesh.Vector3; rotated: Polymesh.Vector3[]; areaRotated: Polymesh.pt2_2;
-        flag: Polymesh.FlagMesh; curcam: view;
+        _faces: Polymesh.Face[]; _points: Polymesh.Vector3[]; pivot: Polymesh.Vector3;
+        flag: Polymesh.FlagMesh;
         data: {[id: string]: any}; kind: number; idx: number; scale: number;
 
         isOutOfArea(camera: view) {
             
-        }
-
-        rotateToView(cam?: view) {
-            if (cam) this.curcam = cam;
-            const centerX = this.curcam.viewport.width >>> 1, centerY = this.curcam.viewport.height >>> 1;
-
-            let tmp = 0
-            const cosX = fcos(this.curcam.rot.x), sinX = fsin(this.curcam.rot.x);
-            const cosY = fcos(this.curcam.rot.y), sinY = fsin(this.curcam.rot.y);
-            const cosZ = fcos(this.curcam.rot.z), sinZ = fsin(this.curcam.rot.z);
-
-            this.areaRotated = new pt2_2(
-                width, height,
-                -1, -1,
-            )
-
-            // Transform vertices
-            this.rotated = msh.pointCam((v) => {
-                let x = v.x - this.pos.x;
-                let y = v.y - this.pos.y;
-                let z = v.z - this.pos.z;
-                tmp = x * cosY + z * sinY, z = -x * sinY + z * cosY, x = tmp; // --- rotate around y ---
-                tmp = y * cosX - z * sinX, z = y * sinX + z * cosX, y = tmp; // --- rotate around x ---
-                tmp = x * cosZ - y * sinZ, y = x * sinZ + y * cosZ, x = tmp; // --- rotate around z ---
-
-                const vsum = 1.1 * finv(psqrt((x * x) + (y * y) + (z * z)))
-                // camera offset
-                x += (x === 0 ? 0 : Math.sign(x) * vsum);
-                y += (y === 0 ? 0 : Math.sign(y) * vsum);
-                z += (z === 0 ? 0 : Math.sign(z) * vsum);
-                // Perspective
-                const scale = Math.abs(cam.near) * finv(Math.abs(cam.near) + z);
-                const result = new Vector3(
-                    centerX + (x * scale * zoom),
-                    centerY + (y * scale * zoom),
-                    z
-                );
-
-                this.areaRotated.x0 = Math.min(result.x, this.areaRotated.x0);
-                this.areaRotated.y0 = Math.min(result.y, this.areaRotated.y0);
-                this.areaRotated.x1 = Math.max(result.x, this.areaRotated.x1);
-                this.areaRotated.y1 = Math.max(result.y, this.areaRotated.y1);
-
-                return result;
-            });
         }
     
         set faces(vals: {indices: number[], color: number, offset?: number, scale?: number, img?: Image}[]) {
@@ -371,13 +326,11 @@ namespace Polymesh {
         };
     
         __onLoop() {
-            this.rotateToView();
             this.updImgLodCacheSlot();
             this.updImgLodCache();
         }
     
         init() {
-            this.curview = camview;
             this.data = {};
             this._faces = [];
             this._points = [];

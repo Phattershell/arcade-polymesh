@@ -109,8 +109,35 @@ namespace Polymesh {
 
             const dist = this.near, fardist = (this.far === 0 ? 0x7f : this.far), zoom = this.zoom;
 
-            if (this !== msh.curcam) return;
-            msh.rotateToView(this);
+            const centerX = output.width >>> 1, centerY = output.height >>> 1;
+
+            let tmp = 0
+            const cosX = fcos(camview.rot.x), sinX = fsin(camview.rot.x);
+            const cosY = fcos(camview.rot.y), sinY = fsin(camview.rot.y);
+            const cosZ = fcos(camview.rot.z), sinZ = fsin(camview.rot.z);
+
+            // Transform vertices
+            const rotated = msh.pointCam((v) => {
+                let x = v.x - this.pos.x;
+                let y = v.y - this.pos.y;
+                let z = v.z - this.pos.z;
+                tmp = x * cosY + z * sinY, z = -x * sinY + z * cosY, x = tmp; // --- rotate around y ---
+                tmp = y * cosX - z * sinX, z = y * sinX + z * cosX, y = tmp; // --- rotate around x ---
+                tmp = x * cosZ - y * sinZ, y = x * sinZ + y * cosZ, x = tmp; // --- rotate around z ---
+
+                const vsum = 1.1 * finv(psqrt((x * x) + (y * y) + (z * z)))
+                // camera offset
+                x += (x === 0 ? 0 : Math.sign(x) * vsum);
+                y += (y === 0 ? 0 : Math.sign(y) * vsum);
+                z += (z === 0 ? 0 : Math.sign(z) * vsum);
+                // Perspective
+                const scale = Math.abs(dist) * finv(Math.abs(dist) + z);
+                return new Vector3(
+                    centerX + (x * scale * zoom),
+                    centerY + (y * scale * zoom),
+                    z
+                );
+            });
 
             // Sort triangles
             const trisCMP = (a: Polymesh.FaceLOD, b: Polymesh.FaceLOD) => avgZ(rotated, b.indices) - avgZ(rotated, a.indices)
