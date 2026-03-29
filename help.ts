@@ -1,43 +1,6 @@
 
 namespace Polymesh {
 
-    export function findBestMipmapIndexFromPoints(points: pt2[], mipmapImgs: Image[]): number {
-        let minY = Infinity, maxY = -Infinity;
-        let minX = Infinity, maxX = -Infinity;
-
-        for (const pt of points) {
-            minY = Math.min(minY, pt.y);
-            minX = Math.min(minX, pt.x);
-            maxY = Math.max(maxY, pt.y);
-            maxX = Math.max(maxX, pt.x);
-        }
-
-        const bboxW = Math.abs(maxX - minX);
-        const bboxH = Math.abs(maxY - minX);
-
-        const tragetArea = (bboxW * bboxH);
-        if (tragetArea <= 0 || mipmapImgs.length <= 0) return -1;
-
-        let bestIndex = -1;
-        let smallestDiff = Infinity;
-
-        for (let i = mipmapImgs.length - 1; i >= 0; i--) {
-            const v = mipmapImgs[i];
-            const scale = Math.min(v.width / bboxW, v.height / bboxH);
-            const outW = bboxW * scale;
-            const outH = bboxH * scale;
-            const outArea = outW * outH;
-            const diff = Math.abs(outArea - tragetArea);
-            const diffPercent = ((diff / tragetArea) * 0xffff)|0;
-            if (diffPercent < smallestDiff) {
-                smallestDiff = diffPercent;
-                bestIndex = i;
-            }
-        }
-        if (bestIndex > -1) return bestIndex;
-        return -1
-    }
-
     const PI0_0111_ = Math.PI * 0.111111111111111;
 
     export function finv(x: number): number {
@@ -386,6 +349,13 @@ namespace Polymesh {
 
     export function isOutOfRange(x: number, range: number, scale?: number) { return (scale ? x < -(range * scale) || x >= range + (range * scale) : x < 0 || x >= range); }
 
+    export function fximgIsOutOfRangeFacing(d: number, n: number, m: number, r: boolean) {
+        return (
+            r ? ((d <= 0 && n < 0) || (d >= 0 && n >= m))
+            :   ((d >= 0 && n < 0) || (d <= 0 && n >= m))
+        )
+    }
+
     export function isOutOfArea(x: number, y: number, width: number, height: number, scale?: number) { return (isOutOfRange(x, width, scale) || isOutOfRange(y, height, scale)); }
 
     export function isOutOfAreas(poinst2s: pt2[], width: number, height: number, scale?: number) { return (poinst2s.every(pt => isOutOfArea(pt.x, pt.y, width, height, scale))); }
@@ -422,8 +392,8 @@ namespace Polymesh {
 
     class Ptl { public x0: number; public y0: number; public x1: number; public y1: number; constructor(x0: number, y0: number, x1: number, y1: number) { this.x0 = x0; this.y0 = y0; this.x1 = x1; this.y1 = y1; } }
 
-    const zigzet = (l: number, r: number, n: number, c?: boolean) => {
-        if (l + n > r) return NaN;
+    export function zigzet(l: number, r: number, n: number, c?: boolean) {
+        if (l + n > r) return -1;
         const size = (r - l);
         const n2 = Math.idiv(n, 2);
         const half = (c ? 0.5 : 0)

@@ -168,18 +168,6 @@ namespace Polymesh {
                     if (msh.flag.mipmap) {
                         let mipmapScale = finv(scale * zoom) * 0.2;
                         mipmapScale = Math.clamp(0, t.imgs.length - 1, Math.round((1.25 - mipmapScale) * (t.imgs.length - 1)));
-                        if (inds.length > 2) {
-                            let points = [
-                                new pt2(rotated[inds[0]].x, rotated[inds[0]].y),
-                                new pt2(rotated[inds[1]].x, rotated[inds[1]].y),
-                                new pt2(rotated[inds[2]].x, rotated[inds[2]].y),
-                            ]
-                            if (inds.length > 3) points.push(new pt2(rotated[inds[3]].x, rotated[inds[3]].y))
-                            mipmapScale = findBestMipmapIndexFromPoints(points, t.imgs)
-                        }
-                        if (mipmapScale > -1)
-                            mipmapScale = finv(scale * zoom) * 0.2,
-                            mipmapScale = Math.clamp(0, t.imgs.length - 1, Math.round((1.25 - mipmapScale) * (t.imgs.length - 1)));
                         im = t.imgs[mipmapScale]
                         if (im == null) im = image.create(1, 1)
                     }

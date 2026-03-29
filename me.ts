@@ -60,11 +60,12 @@ namespace Polymesh {
     }
 
     //% blockId=poly_create
-    //% block="create mesh with kind $kind=poly_kind_shadow"
+    //% block="create mesh with kind $kind=poly_kind_shadow|| and size $size"
     //% blockSetVariable=myMesh
     //% group="create"
     //% weight=10
-    export function create(kind: number) {
+    export function create(kind: number, size?: number) {
+        if (size === undefined) size = 1;
         if (!__meshes_refs[kind]) __meshes_refs[kind] = []
         let idx = -1
         if (__meshes_null_refs.length > 0) {
@@ -75,13 +76,13 @@ namespace Polymesh {
         if (idx < 0) {
             idx = __meshes.length
             __meshes_refs[kind].push(idx)
-            const msh = new model(Math.floor(kind), idx);
+            const msh = new model(Math.floor(kind), idx, size);
             __meshes.push(msh)
             __meshes_kinds[kind].push(msh)
             return msh
         }
         __meshes_refs[kind].push(idx)
-        const msh = new model(Math.floor(kind), idx);
+        const msh = new model(Math.floor(kind), idx, size);
         __meshes[idx] = msh
         __meshes_kinds[kind].push(msh)
         return msh

@@ -157,7 +157,7 @@ namespace Polymesh {
     export class model extends base {
     
         _faces: Polymesh.Face[]; _points: Polymesh.Vector3[]; pivot: Polymesh.Vector3;
-        flag: Polymesh.FlagMesh;
+        flag: Polymesh.FlagMesh; orien: Mat4x4; trans: Mat4x4;
         data: {[id: string]: any}; kind: number; idx: number; scale: number;
 
         isOutOfArea(camera: view) {
@@ -328,6 +328,9 @@ namespace Polymesh {
         __onLoop() {
             this.updImgLodCacheSlot();
             this.updImgLodCache();
+            //this.trans = multiplyM44M44(makeTranslationMatrix(this.pos), multiplyM44M44(makeOXRotationMatrix(this.rot.x), makeScalingMatrix(this.scale)));
+            //this.trans = multiplyM44M44(makeTranslationMatrix(this.pos), multiplyM44M44(makeOYRotationMatrix(this.rot.y), makeScalingMatrix(this.scale)));
+            //this.trans = multiplyM44M44(makeTranslationMatrix(this.pos), multiplyM44M44(makeOZRotationMatrix(this.rot.z), makeScalingMatrix(this.scale)));
         }
     
         init() {
@@ -339,13 +342,15 @@ namespace Polymesh {
             this.createFacesImgLODcache();
         }
     
-        constructor(kind: number, idx: number) {
+        constructor(kind: number, idx: number, scale: number, orien?: Mat4x4) {
             super();
-            this.scale = 1;
+            this.scale = scale || 1;
             this.kind = kind || 0;
             this.kind |= 0;
             this.idx = idx || 0;
             this.idx |= 0;
+            this.orien = orien || Identity4x4;
+            this.trans = multiplyM44M44(makeTranslationMatrix(this.pos), multiplyM44M44(this.orien, makeScalingMatrix(this.scale)));
         }
     
         __onDel() {

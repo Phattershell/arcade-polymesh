@@ -40,11 +40,16 @@ namespace Polymesh {
     }
 
     export class Vector3 {
-        protected _x: Fx8 = Fx.zeroFx8; protected _y: Fx8 = Fx.zeroFx8; protected _z: Fx8 = Fx.zeroFx8;
+        protected  _x: Fx8 = Fx.zeroFx8; protected  _y: Fx8 = Fx.zeroFx8; protected  _z: Fx8 = Fx.zeroFx8;
+        protected _lx: Fx8 =       null; protected _ly: Fx8 =       null; protected _lz: Fx8 =       null;
 
-        set x(n: number) { this._x = Fx8(n); }; get x() { return Fx.toFloat(this._x); };
-        set y(n: number) { this._y = Fx8(n); }; get y() { return Fx.toFloat(this._y); };
-        set z(n: number) { this._z = Fx8(n); }; get z() { return Fx.toFloat(this._z); };
+        set x(n: number) { this._x = iFx8(n); }; get x() { return Fx.toFloat(this._x); };
+        set y(n: number) { this._y = iFx8(n); }; get y() { return Fx.toFloat(this._y); };
+        set z(n: number) { this._z = iFx8(n); }; get z() { return Fx.toFloat(this._z); };
+
+        callX(call: () => void) { if (this._x === this._lx) return; this._lx = this._x; call(); };
+        callY(call: () => void) { if (this._y === this._ly) return; this._ly = this._y; call(); };
+        callZ(call: () => void) { if (this._z === this._lz) return; this._lz = this._z; call(); };
 
         constructor(x: number, y: number, z: number) {
             this.x = x; this.y = y; this.z = z;
@@ -55,7 +60,33 @@ namespace Polymesh {
         };
     }
 
-    export class Motion3 extends Vector3 {
+    //Describes the homogenous coordinates of a 3D point.
+    export class Vector4 extends Vector3 {
+        protected _w: Fx8 = Fx.zeroFx8;
+
+        set w(n: number) { this._w = iFx8(n); }; get w() { return Fx.toFloat(this._w); };
+
+        constructor(x: number, y: number, z: number, w?: number) {
+            super(x, y, z);
+            if (w === undefined) w = 0;
+            this.w = w;
+        }
+        get() {
+            return [this.x, this.y, this.z, this.w];
+        }
+        set(value: number[]) {
+            this.x = value[0];
+            this.y = value[1];
+            this.z = value[2];
+            this.w = value[3];
+        }
+
+        public normalize() {
+            return super.normalize();
+        };
+    }
+
+    export class Motion3 extends Vector4 {
         // protected _x:  Fx8 = Fx.zeroFx8; protected _y:  Fx8 = Fx.zeroFx8; protected _z:  Fx8 = Fx.zeroFx8;
         protected _vx: Fx8 = Fx.zeroFx8; protected _vy: Fx8 = Fx.zeroFx8; protected _vz: Fx8 = Fx.zeroFx8;
         protected _ax: Fx8 = Fx.zeroFx8; protected _ay: Fx8 = Fx.zeroFx8; protected _az: Fx8 = Fx.zeroFx8;
@@ -79,17 +110,24 @@ namespace Polymesh {
 
         update(delta: Fx8) {
             if (this._ax !== Fx.zeroFx8) this._vx = Fx.add(this._vx, Fx.mul(this._ax, delta));
-            if (this._ay !== Fx.zeroFx8) this._vy = Fx.add(this._vy, Fx.mul(this._ay, delta));
-            if (this._az !== Fx.zeroFx8) this._vz = Fx.add(this._vz, Fx.mul(this._az, delta));
-
             if (this._fx !== Fx.zeroFx8) this._vx = Fx.mul(this._vx, Fx.mul(this._fx, delta));
-            if (this._fy !== Fx.zeroFx8) this._vy = Fx.mul(this._vy, Fx.mul(this._fx, delta));
-            if (this._fz !== Fx.zeroFx8) this._vz = Fx.mul(this._fz, Fx.mul(this._fz, delta));
-
             if (this._vx !== Fx.zeroFx8) this._x  = Fx.add(this._x,  Fx.mul(this._vx, delta));
+            //this.callX(() => this.xDo());
+            
+            if (this._ay !== Fx.zeroFx8) this._vy = Fx.add(this._vy, Fx.mul(this._ay, delta));
+            if (this._fy !== Fx.zeroFx8) this._vy = Fx.mul(this._vy, Fx.mul(this._fx, delta));
             if (this._vy !== Fx.zeroFx8) this._y  = Fx.add(this._y,  Fx.mul(this._vy, delta));
+            //this.callY(() => this.yDo());
+
+            if (this._az !== Fx.zeroFx8) this._vz = Fx.add(this._vz, Fx.mul(this._az, delta));
+            if (this._fz !== Fx.zeroFx8) this._vz = Fx.mul(this._fz, Fx.mul(this._fz, delta));
             if (this._vz !== Fx.zeroFx8) this._z  = Fx.add(this._z,  Fx.mul(this._vz, delta));
+            //this.callZ(() => this.zDo());
         }
+
+        //public xDo() { };
+        //public yDo() { };
+        //public zDo() { };
         
         constructor(x: number, y: number, z: number, vx: number, vy: number, vz: number, ax: number, ay: number, az: number, fx: number, fy: number, fz: number) {
             super(x, y, z);
@@ -100,7 +138,7 @@ namespace Polymesh {
         };
 
         public toVector() {
-            return new Vector3(this.x, this.y, this.z);
+            return new Vector4(this.x, this.y, this.z);
         }
         
         public normalize() {
@@ -135,71 +173,65 @@ namespace Polymesh {
     }
     */
 
-    //Describes the homogenous coordinates of a 3D point.
-    export class Vector4 extends Vector3 {
-        w: number;
-        constructor(x: number, y: number, z: number, w?: number) {
-            super(x, y, z);
-            this.w = w || 0;
-        }
-        get() {
-            return [this.x, this.y, this.z, this.w];
-        }
-        set(value: number[]) {
-            this.x = value[0];
-            this.y = value[1];
-            this.z = value[2];
-            this.w = value[3];
-        }
-    }
-
     //Matrix stuff
 
     export class Mat4x4 {
-        data: number[][];
-        constructor(data: number[][]) {
-            this.data = data
+        protected range: int8 = 4;
+        protected pos2idx(x: number, y: number) {
+            if (x < 0 || x >= this.range) return -1;
+            if (y < 0 || y >= this.range) return -1;
+            return x + (y * this.range);
         }
+        protected _data: number[];
+        constructor(data: number[]) {
+            this._data = data.slice(0, this.range * this.range);
+        }
+
+        get data() { return this._data; }
+
+        set(x: number, y: number, v: number) { this._data[this.pos2idx(x, y)] = v; }
+
+        get(x: number, y: number) { return this._data[this.pos2idx(x, y)]; }
     }
 
     export const Identity4x4 = new Mat4x4([
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1]
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1,
     ]);
 
     const DEG_TO_RAD = Math.PI / 180.0
 
     //Used for rotations about the y axis
-    export function makeOYRotationMatrix(degrees: number) {
-        let cos = fcos(degrees * DEG_TO_RAD);
-        let sin = fsin(degrees * DEG_TO_RAD);
+    export function makeOYRotationMatrix(radian: number) {
+        let cos = fcos(radian);
+        let sin = fsin(radian);
         return new Mat4x4([
-            [cos, 0, -sin, 0],
-            [0, 1, 0, 0],
-            [sin, 0, cos, 0],
-            [0, 0, 0, 1]
+            cos, 0, -sin, 0,
+              0, 1,    0, 0,
+            sin, 0,  cos, 0,
+              0, 0,    0, 1,
         ]);
     }
     export function makeOXRotationMatrix(degrees: number) {
         let cos = fcos(degrees * DEG_TO_RAD);
         let sin = fsin(degrees * DEG_TO_RAD);
         return new Mat4x4([
-            [1, 0, 0, 0],
-            [0, cos, -sin, 0],
-            [0, sin, cos, 0],
-            [0, 0, 0, 1]
+            1,   0,    0, 0,
+            0, cos, -sin, 0,
+            0, sin,  cos, 0,
+            0,   0,    0, 1,
         ]);
     }
     export function makeOZRotationMatrix(degrees: number) {
         let cos = fcos(degrees * DEG_TO_RAD);
         let sin = fsin(degrees * DEG_TO_RAD);
         return new Mat4x4([
-            [cos, -sin, 0, 0],
-            [sin, cos, 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, 1]
+            cos, -sin, 0, 0,
+            sin,  cos, 0, 0,
+              0,    0, 1, 0,
+              0,    0, 0, 1,
         ]);
     }
 
@@ -209,19 +241,19 @@ namespace Polymesh {
 
     export function makeTranslationMatrix(t: Vector3) {
         return new Mat4x4([
-            [1, 0, 0, t.x],
-            [0, 1, 0, t.y],
-            [0, 0, 1, t.z],
-            [0, 0, 0, 1]
+            1, 0, 0, t.x,
+            0, 1, 0, t.y,
+            0, 0, 1, t.z,
+            0, 0, 0,   1,
         ]);
     }
 
     export function makeScalingMatrix(scale: number) {
         return new Mat4x4([
-            [scale, 0, 0, 0],
-            [0, scale, 0, 0],
-            [0, 0, scale, 0],
-            [0, 0, 0, 1]
+            scale,     0,     0, 0,
+                0, scale,     0, 0,
+                0,     0, scale, 0,
+                0,     0,     0, 1,
         ]);
     }
 
@@ -232,7 +264,7 @@ namespace Polymesh {
 
         for (let i = 0; i < 4; i++) {
             for (let j = 0; j < 4; j++) {
-                result[i] += mat4x4.data[i][j] * vec[j];
+                result[i] += mat4x4.get(i, j) * vec[j];
             }
         }
 
@@ -243,16 +275,16 @@ namespace Polymesh {
     // Multiplies two 4x4 matrices.
     export function multiplyM44M44(matA: Mat4x4, matB: Mat4x4) {
         let result = new Mat4x4([
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
         ]);
 
         for (let i = 0; i < 4; i++) {
             for (let j = 0; j < 4; j++) {
                 for (let k = 0; k < 4; k++) {
-                    result.data[i][j] += matA.data[i][k] * matB.data[k][j];
+                    result.set(i, j, result.get(i, j) + matA.get(i, k) * matB.get(k, j));
                 }
             }
         }
@@ -264,14 +296,14 @@ namespace Polymesh {
     // Transposes a 4x4 matrix.
     export function transposed(mat: Mat4x4) {
         let result = new Mat4x4([
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
         ]);
         for (let i = 0; i < 4; i++) {
             for (let j = 0; j < 4; j++) {
-                result.data[i][j] = mat.data[j][i];
+                result.set(i, j, mat.get(j, i));
             }
         }
         return result;
