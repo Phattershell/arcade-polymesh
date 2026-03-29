@@ -284,12 +284,13 @@ namespace Polymesh {
                 return;
             }
             let img = image.create(1, 1), scale = 0.2;
+            this.faces_imgs[idx].imgDB[hidx].push(img.clone());
             while (img.width < cimg.width || img.height < cimg.height) {
                 Polymesh.resizeImage(cimg.clone(), img, true);
                 this.faces_imgs[idx].imgDB[hidx].push(img.clone());
                 const scaleD = scale;
                 img = image.create(Math.max(1, Math.trunc(scaleD * cimg.width)), Math.max(1, Math.trunc(scaleD * cimg.height)));
-                scale += square * (scale * 0.00009);
+                scale += square * (scale * 0.0003);
             } this.faces_imgs[idx].imgDB[hidx].push(cimg.clone());
         }
     
