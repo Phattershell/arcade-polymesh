@@ -20,8 +20,8 @@ namespace Polymesh {
     export function iFx8(v: number) {
         switch (v) {
             case 2.0: return Fx.twoFx8;
-            case 1.5: return Fx.oneHalfFx8;
             case 1.0: return Fx.oneFx8;
+            case 0.5: return Fx.oneHalfFx8;
             case 0.0: return Fx.zeroFx8;
             default:  return Fx8(v);
         }
@@ -40,8 +40,9 @@ namespace Polymesh {
     }
 
     export class Vector3 {
-        protected  _x: Fx8 = Fx.zeroFx8; protected  _y: Fx8 = Fx.zeroFx8; protected  _z: Fx8 = Fx.zeroFx8;
-        protected _lx: Fx8 =       null; protected _ly: Fx8 =       null; protected _lz: Fx8 =       null;
+        _x: Fx8 = Fx.zeroFx8; _lx: Fx8 = null;
+        _y: Fx8 = Fx.zeroFx8; _ly: Fx8 = null;
+        _z: Fx8 = Fx.zeroFx8; _lz: Fx8 = null;
 
         set x(n: number) { this._x = iFx8(n); }; get x() { return Fx.toFloat(this._x); };
         set y(n: number) { this._y = iFx8(n); }; get y() { return Fx.toFloat(this._y); };
@@ -88,9 +89,9 @@ namespace Polymesh {
 
     export class Motion3 extends Vector4 {
         // protected _x:  Fx8 = Fx.zeroFx8; protected _y:  Fx8 = Fx.zeroFx8; protected _z:  Fx8 = Fx.zeroFx8;
-        protected _vx: Fx8 = Fx.zeroFx8; protected _vy: Fx8 = Fx.zeroFx8; protected _vz: Fx8 = Fx.zeroFx8;
-        protected _ax: Fx8 = Fx.zeroFx8; protected _ay: Fx8 = Fx.zeroFx8; protected _az: Fx8 = Fx.zeroFx8;
-        protected _fx: Fx8 = Fx.zeroFx8; protected _fy: Fx8 = Fx.zeroFx8; protected _fz: Fx8 = Fx.zeroFx8;
+        _vx: Fx8 = Fx.zeroFx8; _vy: Fx8 = Fx.zeroFx8; _vz: Fx8 = Fx.zeroFx8;
+        _ax: Fx8 = Fx.zeroFx8; _ay: Fx8 = Fx.zeroFx8; _az: Fx8 = Fx.zeroFx8;
+        _fx: Fx8 = Fx.zeroFx8; _fy: Fx8 = Fx.zeroFx8; _fz: Fx8 = Fx.zeroFx8;
 
         //set  x(n: number) { this._x  = Fx8(n); }; get  x() { return Fx.toFloat(this._x);  };
         //set  y(n: number) { this._y  = Fx8(n); }; get  y() { return Fx.toFloat(this._y);  };
@@ -234,19 +235,16 @@ namespace Polymesh {
               0,    0, 0, 1,
         ]);
     }
-    export function makeOZYXMatrix(rx: number, ry: number, rz: number) {
-        return
-            multiplyM44M44(
-                makeOZRotationMatrix(rz), 
-                multiplyM44M44(
-                    makeOYRotationMatrix(ry),
-                    makeOXRotationMatrix(rx)
-                )
-            );
-    }
 
-    export function makeGeneralRotationMatrix(eulerAngles: Vector3) {
-        return multiplyM44M44(makeOZRotationMatrix(eulerAngles.z), multiplyM44M44(makeOYRotationMatrix(eulerAngles.y), makeOXRotationMatrix(eulerAngles.x)));
+    export function makeGeneralRotationMatrix(eulerAngles: Vector4) {
+        return
+        multiplyM44M44(
+            makeOZRotationMatrix(eulerAngles.z),
+            multiplyM44M44(
+                makeOYRotationMatrix(eulerAngles.y),
+                makeOXRotationMatrix(eulerAngles.x)
+            )
+        );
     }
 
     export function makeTranslationMatrix(t: Vector3) {
