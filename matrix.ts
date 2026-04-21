@@ -204,9 +204,9 @@ namespace Polymesh {
     const DEG_TO_RAD = Math.PI / 180.0
 
     //Used for rotations about the y axis
-    export function makeOYRotationMatrix(radian: number) {
-        let cos = fcos(radian);
-        let sin = fsin(radian);
+    export function makeOYRotationMatrix(rad: number) {
+        let cos = fcos(rad);
+        let sin = fsin(rad);
         return new Mat4x4([
             cos, 0, -sin, 0,
               0, 1,    0, 0,
@@ -214,9 +214,9 @@ namespace Polymesh {
               0, 0,    0, 1,
         ]);
     }
-    export function makeOXRotationMatrix(degrees: number) {
-        let cos = fcos(degrees * DEG_TO_RAD);
-        let sin = fsin(degrees * DEG_TO_RAD);
+    export function makeOXRotationMatrix(rad: number) {
+        let cos = fcos(rad);
+        let sin = fsin(rad);
         return new Mat4x4([
             1,   0,    0, 0,
             0, cos, -sin, 0,
@@ -224,15 +224,25 @@ namespace Polymesh {
             0,   0,    0, 1,
         ]);
     }
-    export function makeOZRotationMatrix(degrees: number) {
-        let cos = fcos(degrees * DEG_TO_RAD);
-        let sin = fsin(degrees * DEG_TO_RAD);
+    export function makeOZRotationMatrix(rad: number) {
+        let cos = fcos(rad);
+        let sin = fsin(rad);
         return new Mat4x4([
             cos, -sin, 0, 0,
             sin,  cos, 0, 0,
               0,    0, 1, 0,
               0,    0, 0, 1,
         ]);
+    }
+    export function makeOZYXMatrix(rx: number, ry: number, rz: number) {
+        return
+            multiplyM44M44(
+                makeOZRotationMatrix(rz), 
+                multiplyM44M44(
+                    makeOYRotationMatrix(ry),
+                    makeOXRotationMatrix(rx)
+                )
+            );
     }
 
     export function makeGeneralRotationMatrix(eulerAngles: Vector3) {
